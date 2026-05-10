@@ -1,0 +1,469 @@
+{
+"schema_name": "SRP_SCHEMA_v1",
+"schema_version": "1.0.0",
+"protocol_version": "SRP_v2",
+"created_with_protocol": "PROTOCOLO SRP v2",
+"serialization_format": "JSON",
+"machine_safe": true,
+"parser_safe": true,
+"extensible": true,
+"deterministic": true,
+
+"constants": {
+"EMPTY": {
+"type": "reserved_token",
+"case_sensitive": true,
+"replaceable": false,
+"translatable": false,
+"description": "Explicit empty category token in SRP textual protocol"
+},
+
+```
+"COURSE_DELIMITER": {
+  "token": "=== CURSO ===",
+  "type": "structural_delimiter",
+  "required": true,
+  "description": "Official SRP course block delimiter"
+}
+```
+
+},
+
+"normalization": {
+"encoding": "UTF-8",
+"line_endings": "LF",
+"trim_whitespace": true,
+"remove_trailing_spaces": true,
+"normalize_unicode": true,
+"preserve_emojis": true,
+"normalize_whitespace": true,
+"collapse_multiple_blank_lines": true,
+"markdown_tolerant": true
+},
+
+"parser": {
+"parser_name": "SRP_PARSER",
+"parser_version": "1.0.0",
+
+```
+"accepted_bullets": [
+  "-",
+  "*",
+  "•"
+],
+
+"normalize_bullets_to": "ITEM",
+
+"parser_resilience": {
+  "allow_multiline_items": true,
+  "allow_nested_subitems": true,
+  "max_subitem_depth": 1,
+  "recover_missing_categories": true,
+  "recover_missing_dates": true,
+  "recover_missing_bullets": true,
+  "recover_partial_structures": true,
+  "preserve_raw_input": true,
+  "tolerate_spacing_variations": true,
+  "tolerate_markdown_variations": true
+},
+
+"confidence_scoring": {
+  "1.0": "valid_structure",
+  "0.8": "valid_with_minor_recovery",
+  "0.5": "partially_recovered",
+  "0.2": "heavily_degraded",
+  "0.0": "parse_failed"
+}
+```
+
+},
+
+"validation": {
+"required_categories": true,
+"detect_duplicate_categories": true,
+"detect_invalid_courses": true,
+"detect_invalid_dates": true,
+"detect_empty_items": true,
+"detect_orphan_subitems": true,
+"detect_invalid_order": true,
+"detect_semantic_conflicts": true,
+"detect_parser_conflicts": true,
+
+```
+"recoverable_errors": [
+  "missing_date",
+  "missing_category",
+  "mixed_bullets",
+  "spacing_inconsistency",
+  "multiline_variation"
+],
+
+"fatal_errors": [
+  "missing_course_block",
+  "invalid_root_structure",
+  "corrupted_course_delimiter"
+]
+```
+
+},
+
+"status_enum": [
+"pendiente",
+"realizado",
+"cancelado",
+"postergado",
+"recurrente",
+"archivado"
+],
+
+"official_courses": [
+"PRIMERO",
+"SEGUNDO",
+"TERCERO",
+"CUARTO",
+"QUINTO",
+"SEXTO",
+"SEPTIMO",
+"OCTAVO",
+"CUERDAS",
+"CASTIGADAS",
+"KIDS CASTIGADAS",
+"RECREO",
+"ENLACE",
+"ORIENTACIÓN"
+],
+
+"official_categories": [
+{
+"id": "revision",
+"display_name": "📝 revision",
+"order": 0,
+"required": true,
+"allow_subitems": true,
+"item_type": "revision_item"
+},
+
+```
+{
+  "id": "pendientes_sala",
+  "display_name": "🎵 pendientes_sala",
+  "order": 1,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "task"
+},
+
+{
+  "id": "pendientes_planificacion",
+  "display_name": "🧠 pendientes_planificacion",
+  "order": 2,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "task"
+},
+
+{
+  "id": "pendientes_materiales",
+  "display_name": "🎒 pendientes_materiales",
+  "order": 3,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "material_task"
+},
+
+{
+  "id": "pendientes_casa",
+  "display_name": "🏠 pendientes_casa",
+  "order": 4,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "home_task"
+},
+
+{
+  "id": "pendientes_administrativos",
+  "display_name": "📋 pendientes_administrativos",
+  "order": 5,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "administrative_task"
+},
+
+{
+  "id": "pendientes_mensajes",
+  "display_name": "💬 pendientes_mensajes",
+  "order": 6,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "message_task"
+},
+
+{
+  "id": "pendientes_jefatura",
+  "display_name": "👥 pendientes_jefatura",
+  "order": 7,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "leadership_task"
+},
+
+{
+  "id": "pendientes_apps",
+  "display_name": "💻 pendientes_apps",
+  "order": 8,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "technical_task"
+},
+
+{
+  "id": "posible_repertorio",
+  "display_name": "🎼 posible_repertorio",
+  "order": 9,
+  "required": true,
+  "allow_subitems": true,
+  "item_type": "repertoire_candidate"
+}
+```
+
+],
+
+"metadata_definition": {
+"required_fields": [
+"source",
+"created_at",
+"parsed_at",
+"protocol_version",
+"schema_version",
+"parser_version",
+"confidence"
+],
+
+```
+"source_enum": [
+  "gpt",
+  "manual",
+  "notion",
+  "srp"
+]
+```
+
+},
+
+"id_strategy": {
+"persistent_ids": "UUIDv4",
+"temporary_ids": "tmp_*",
+"parser_generated_ids": "parser_*",
+"notion_ids": "notion_*"
+},
+
+"root_structure": {
+"schema_version": "string",
+"protocol_version": "string",
+
+```
+"metadata": {
+  "source": "string",
+  "created_at": "ISO_8601",
+  "parsed_at": "ISO_8601",
+  "protocol_version": "string",
+  "schema_version": "string",
+  "parser_version": "string",
+  "confidence": "float"
+},
+
+"parser": {
+  "parser_name": "string",
+  "parser_version": "string"
+},
+
+"normalization": {
+  "encoding": "UTF-8",
+  "line_endings": "LF"
+},
+
+"validation": {
+  "success": "boolean",
+  "warnings": [],
+  "errors": []
+},
+
+"courses": [
+  {
+    "id": "UUIDv4",
+
+    "course_name": "OFFICIAL_SRP_CONSTANT",
+
+    "course_constant_valid": "boolean",
+
+    "date": {
+      "raw": "string",
+      "iso": "YYYY-MM-DD",
+      "detected": "boolean"
+    },
+
+    "categories": {
+      "revision": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_sala": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_planificacion": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_materiales": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_casa": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_administrativos": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_mensajes": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_jefatura": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "pendientes_apps": {
+        "empty": "boolean",
+        "items": []
+      },
+
+      "posible_repertorio": {
+        "empty": "boolean",
+        "items": []
+      }
+    },
+
+    "metadata": {
+      "created_at": "ISO_8601",
+      "updated_at": "ISO_8601",
+      "source": "string",
+      "confidence": "float"
+    }
+  }
+]
+```
+
+},
+
+"item_structure": {
+"id": "UUIDv4",
+
+```
+"parser_generated_id": "parser_item_*",
+
+"parent_id": "UUIDv4|null",
+
+"category_id": "official_category_id",
+
+"item_type": "string",
+
+"text": "string",
+
+"normalized_text": "string",
+
+"status": "status_enum",
+
+"priority": "string|null",
+
+"subitems": [],
+
+"tags": [],
+
+"relations": [],
+
+"dates": {
+  "created_at": "ISO_8601",
+  "updated_at": "ISO_8601",
+  "due_date_raw": "string|null",
+  "due_date_iso": "YYYY-MM-DD|null"
+},
+
+"source": {
+  "origin": "gpt|manual|notion|srp",
+  "raw_fragment": "string"
+},
+
+"parser_metadata": {
+  "confidence": "float",
+  "bullet_detected": "string",
+  "multiline_detected": "boolean",
+  "recovered_from_error": "boolean"
+},
+
+"metadata": {}
+```
+
+},
+
+"subitem_structure": {
+"id": "UUIDv4",
+"parent_id": "UUIDv4",
+"text": "string",
+"status": "status_enum"
+},
+
+"notion_mapping": {
+"course_name": "title",
+"status": "select",
+"category_id": "select",
+"due_date_iso": "date",
+"tags": "multi_select",
+"confidence": "number",
+"raw_fragment": "rich_text"
+},
+
+"parser_pipeline": [
+"receive_raw_input",
+"normalize_encoding_utf8",
+"normalize_unicode",
+"normalize_line_endings_lf",
+"trim_whitespace",
+"remove_trailing_spaces",
+"normalize_markdown_variations",
+"detect_course_blocks",
+"detect_categories",
+"detect_items",
+"detect_subitems",
+"validate_structure",
+"recover_partial_errors",
+"generate_ids",
+"map_categories",
+"serialize_json"
+],
+
+"architectural_principles": {
+"srp_text_protocol": "human_interface",
+
+```
+"srp_schema_v1": "machine_interface",
+
+"srp_parser": "translation_layer",
+
+"persistence_layer": "stable_structural_storage",
+
+"notion_and_srp": "consumer_layers"
+```
+
+}
+}

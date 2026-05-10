@@ -1,0 +1,757 @@
+{
+  "schema_name": "SRP_SCHEMA_v2",
+  "schema_version": "2.0.0",
+  "protocol_version": "SRP_v2",
+  "serialization_format": "JSON",
+  "machine_safe": true,
+  "parser_safe": true,
+  "extensible": true,
+  "deterministic": true,
+
+  "constants": {
+    "EMPTY": {
+      "type": "reserved_token",
+      "value": "EMPTY",
+      "case_sensitive": true,
+      "replaceable": false,
+      "translatable": false
+    },
+    "COURSE_DELIMITER": {
+      "type": "structural_delimiter",
+      "value": "=== CURSO ===",
+      "required": true
+    }
+  },
+
+  "normalization": {
+    "encoding": "UTF-8",
+    "line_endings": "LF",
+    "trim_whitespace": true,
+    "remove_trailing_spaces": true,
+    "normalize_unicode": true,
+    "normalize_whitespace": true,
+    "collapse_multiple_blank_lines": true,
+    "preserve_emojis": true,
+    "markdown_tolerant": true
+  },
+
+  "official_courses": [
+    "PRIMERO",
+    "SEGUNDO",
+    "TERCERO",
+    "CUARTO",
+    "QUINTO",
+    "SEXTO",
+    "SEPTIMO",
+    "OCTAVO",
+    "CUERDAS",
+    "CASTIGADAS",
+    "KIDS CASTIGADAS",
+    "RECREO",
+    "ENLACE",
+    "ORIENTACIÓN"
+  ],
+
+  "official_categories": [
+    {
+      "id": "revision",
+      "display_name": "📝 revision",
+      "order": 0,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "revision_item"
+    },
+    {
+      "id": "pendientes_sala",
+      "display_name": "🎵 pendientes_sala",
+      "order": 1,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "task"
+    },
+    {
+      "id": "pendientes_planificacion",
+      "display_name": "🧠 pendientes_planificacion",
+      "order": 2,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "task"
+    },
+    {
+      "id": "pendientes_materiales",
+      "display_name": "🎒 pendientes_materiales",
+      "order": 3,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "material_task"
+    },
+    {
+      "id": "pendientes_casa",
+      "display_name": "🏠 pendientes_casa",
+      "order": 4,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "home_task"
+    },
+    {
+      "id": "pendientes_administrativos",
+      "display_name": "📋 pendientes_administrativos",
+      "order": 5,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "administrative_task"
+    },
+    {
+      "id": "pendientes_mensajes",
+      "display_name": "💬 pendientes_mensajes",
+      "order": 6,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "message_task"
+    },
+    {
+      "id": "pendientes_jefatura",
+      "display_name": "👥 pendientes_jefatura",
+      "order": 7,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "leadership_task"
+    },
+    {
+      "id": "pendientes_apps",
+      "display_name": "💻 pendientes_apps",
+      "order": 8,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "technical_task"
+    },
+    {
+      "id": "posible_repertorio",
+      "display_name": "🎼 posible_repertorio",
+      "order": 9,
+      "required": true,
+      "allow_subitems": true,
+      "entity_type": "repertoire_candidate"
+    }
+  ],
+
+  "entity_types": {
+    "base_entity": {
+      "required_fields": [
+        "id",
+        "entity_type",
+        "status",
+        "text",
+        "created_at"
+      ]
+    },
+
+    "revision_item": {
+      "inherits": "base_entity"
+    },
+
+    "task": {
+      "inherits": "base_entity"
+    },
+
+    "material_task": {
+      "inherits": "task"
+    },
+
+    "home_task": {
+      "inherits": "task"
+    },
+
+    "administrative_task": {
+      "inherits": "task"
+    },
+
+    "message_task": {
+      "inherits": "task"
+    },
+
+    "leadership_task": {
+      "inherits": "task"
+    },
+
+    "technical_task": {
+      "inherits": "task"
+    },
+
+    "repertoire_candidate": {
+      "inherits": "base_entity"
+    }
+  },
+
+  "status_enum": {
+    "type": "string",
+    "enum": [
+      "pendiente",
+      "realizado",
+      "cancelado",
+      "postergado",
+      "recurrente",
+      "archivado"
+    ],
+    "default": "pendiente"
+  },
+
+  "id_strategy": {
+    "persistent_ids": {
+      "type": "UUIDv4"
+    },
+    "temporary_ids": {
+      "prefix": "tmp_"
+    },
+    "parser_generated_ids": {
+      "prefix": "parser_"
+    },
+    "notion_ids": {
+      "prefix": "notion_"
+    },
+    "deterministic_ids": {
+      "enabled": true,
+      "strategy": "hash(course_name + category_id + normalized_text)"
+    },
+    "duplicate_detection_strategy": {
+      "enabled": true,
+      "strategy": "normalized_text_similarity"
+    },
+    "merge_detection_strategy": {
+      "enabled": true,
+      "strategy": "hash_and_semantic_similarity"
+    }
+  },
+
+  "ownership_model": {
+    "created_by": {
+      "type": "string",
+      "nullable": true
+    },
+    "modified_by": {
+      "type": "string",
+      "nullable": true
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "gpt",
+        "srp",
+        "notion",
+        "manual"
+      ]
+    },
+    "parser_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "gpt_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "notion_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "user_generated": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+
+  "event_model": {
+    "event_types": [
+      "created",
+      "updated",
+      "completed",
+      "archived",
+      "synced",
+      "imported",
+      "parsed",
+      "merged",
+      "conflict_detected"
+    ],
+
+    "event_structure": {
+      "event_id": {
+        "type": "string"
+      },
+      "event_type": {
+        "type": "string"
+      },
+      "timestamp": {
+        "type": "ISO_8601"
+      },
+      "source": {
+        "type": "string"
+      },
+      "metadata": {
+        "type": "object"
+      }
+    }
+  },
+
+  "relation_model": {
+    "relation_types": [
+      "item_dependency",
+      "derived_from",
+      "related_message",
+      "related_evaluation",
+      "duplicated_from",
+      "merged_into",
+      "linked_course"
+    ],
+
+    "relation_structure": {
+      "relation_id": {
+        "type": "string"
+      },
+      "relation_type": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "string"
+      },
+      "target_id": {
+        "type": "string"
+      },
+      "metadata": {
+        "type": "object"
+      }
+    }
+  },
+
+  "parser": {
+    "parser_name": "SRP_PARSER",
+    "parser_version": "2.0.0",
+
+    "accepted_bullets": [
+      "-",
+      "*",
+      "•"
+    ],
+
+    "normalize_bullets_to": "ITEM",
+
+    "parser_resilience": {
+      "allow_multiline_items": true,
+      "allow_nested_subitems": true,
+      "max_subitem_depth": 1,
+      "recover_missing_categories": true,
+      "recover_missing_dates": true,
+      "recover_missing_bullets": true,
+      "recover_partial_structures": true,
+      "preserve_raw_input": true,
+      "tolerate_spacing_variations": true,
+      "tolerate_markdown_variations": true
+    },
+
+    "confidence_model": {
+      "global_confidence": {
+        "type": "float",
+        "min": 0,
+        "max": 1
+      },
+
+      "category_confidence": {
+        "type": "float",
+        "min": 0,
+        "max": 1
+      },
+
+      "item_confidence": {
+        "type": "float",
+        "min": 0,
+        "max": 1
+      },
+
+      "field_confidence": {
+        "type": "float",
+        "min": 0,
+        "max": 1
+      }
+    }
+  },
+
+  "validation": {
+    "required_categories": true,
+    "detect_duplicate_categories": true,
+    "detect_invalid_courses": true,
+    "detect_invalid_dates": true,
+    "detect_empty_items": true,
+    "detect_orphan_subitems": true,
+    "detect_invalid_order": true,
+    "detect_semantic_conflicts": true,
+    "detect_parser_conflicts": true,
+
+    "severity_levels": [
+      "info",
+      "warning",
+      "error",
+      "fatal"
+    ],
+
+    "field_validation": {
+      "enabled": true
+    },
+
+    "entity_validation": {
+      "enabled": true
+    },
+
+    "schema_validation": {
+      "enabled": true
+    },
+
+    "validation_rules": {
+      "course_must_exist": true,
+      "category_must_exist": true,
+      "item_text_required": true
+    },
+
+    "recovery_rules": {
+      "recover_missing_bullets": true,
+      "recover_missing_dates": true,
+      "recover_missing_categories": true
+    }
+  },
+
+  "storage_model": {
+    "strategy": "local_first",
+
+    "local_first": true,
+
+    "cloud_first": false,
+
+    "persistence_strategy": "snapshot_and_incremental",
+
+    "snapshot_strategy": {
+      "enabled": true,
+      "interval": "daily"
+    },
+
+    "backup_strategy": {
+      "enabled": true,
+      "retention_days": 90
+    },
+
+    "sync_queue": {
+      "enabled": true
+    },
+
+    "offline_behavior": {
+      "allow_local_edits": true,
+      "queue_sync_operations": true
+    }
+  },
+
+  "canonical_source_of_truth": {
+    "primary_source": "srp_local",
+
+    "precedence_rules": [
+      "local_over_remote_when_offline",
+      "manual_edit_over_gpt_generated",
+      "newer_timestamp_over_older"
+    ],
+
+    "overwrite_rules": {
+      "allow_overwrite": true,
+      "require_conflict_check": true
+    },
+
+    "merge_priority": [
+      "manual",
+      "srp",
+      "notion",
+      "gpt"
+    ]
+  },
+
+  "versioning_model": {
+    "migration_strategy": "incremental",
+
+    "backwards_compatibility": true,
+
+    "deprecated_fields": [],
+
+    "parser_compatibility": {
+      "minimum_supported_version": "1.0.0"
+    },
+
+    "migration_rules": {
+      "preserve_unknown_fields": true,
+      "attempt_safe_conversion": true
+    }
+  },
+
+  "notion_sync_model": {
+    "notion_page_id": {
+      "type": "string",
+      "nullable": true
+    },
+
+    "notion_database_id": {
+      "type": "string",
+      "nullable": true
+    },
+
+    "last_sync_at": {
+      "type": "ISO_8601",
+      "nullable": true
+    },
+
+    "sync_direction": {
+      "type": "string",
+      "enum": [
+        "push",
+        "pull",
+        "bidirectional"
+      ]
+    },
+
+    "sync_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "synced",
+        "conflict",
+        "failed"
+      ]
+    },
+
+    "merge_strategy": {
+      "type": "string"
+    },
+
+    "overwrite_policy": {
+      "type": "string"
+    },
+
+    "conflict_resolution": {
+      "type": "string"
+    }
+  },
+
+  "notion_mapping": {
+    "course_name": {
+      "property_type": "title"
+    },
+
+    "status": {
+      "property_type": "select"
+    },
+
+    "category_id": {
+      "property_type": "select"
+    },
+
+    "due_date_iso": {
+      "property_type": "date"
+    },
+
+    "tags": {
+      "property_type": "multi_select"
+    },
+
+    "confidence": {
+      "property_type": "number"
+    },
+
+    "raw_fragment": {
+      "property_type": "rich_text"
+    }
+  },
+
+  "metadata_definition": {
+    "required_fields": [
+      "source",
+      "created_at",
+      "parsed_at",
+      "protocol_version",
+      "schema_version",
+      "parser_version",
+      "confidence"
+    ],
+
+    "field_definitions": {
+      "source": {
+        "type": "string",
+        "enum": [
+          "gpt",
+          "manual",
+          "notion",
+          "srp"
+        ]
+      },
+
+      "created_at": {
+        "type": "ISO_8601"
+      },
+
+      "parsed_at": {
+        "type": "ISO_8601"
+      },
+
+      "confidence": {
+        "type": "float",
+        "min": 0,
+        "max": 1
+      }
+    }
+  },
+
+  "root_structure": {
+    "type": "object",
+
+    "required": [
+      "schema_version",
+      "protocol_version",
+      "courses"
+    ],
+
+    "properties": {
+      "schema_version": {
+        "type": "string"
+      },
+
+      "protocol_version": {
+        "type": "string"
+      },
+
+      "courses": {
+        "type": "array"
+      }
+    }
+  },
+
+  "item_structure": {
+    "type": "object",
+
+    "required": [
+      "id",
+      "entity_type",
+      "category_id",
+      "text",
+      "status"
+    ],
+
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+
+      "parser_generated_id": {
+        "type": "string",
+        "nullable": true
+      },
+
+      "parent_id": {
+        "type": "string",
+        "nullable": true
+      },
+
+      "entity_type": {
+        "type": "string"
+      },
+
+      "category_id": {
+        "type": "string"
+      },
+
+      "text": {
+        "type": "string"
+      },
+
+      "normalized_text": {
+        "type": "string"
+      },
+
+      "status": {
+        "type": "string",
+        "enum": [
+          "pendiente",
+          "realizado",
+          "cancelado",
+          "postergado",
+          "recurrente",
+          "archivado"
+        ]
+      },
+
+      "subitems": {
+        "type": "array"
+      },
+
+      "relations": {
+        "type": "array"
+      },
+
+      "events": {
+        "type": "array"
+      },
+
+      "ownership": {
+        "type": "object"
+      },
+
+      "metadata": {
+        "type": "object"
+      }
+    }
+  },
+
+  "subitem_structure": {
+    "type": "object",
+
+    "required": [
+      "id",
+      "parent_id",
+      "text"
+    ],
+
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+
+      "parent_id": {
+        "type": "string"
+      },
+
+      "text": {
+        "type": "string"
+      },
+
+      "status": {
+        "type": "string"
+      }
+    }
+  },
+
+  "parser_pipeline": [
+    "receive_raw_input",
+    "normalize_encoding_utf8",
+    "normalize_unicode",
+    "normalize_line_endings_lf",
+    "trim_whitespace",
+    "remove_trailing_spaces",
+    "normalize_markdown_variations",
+    "detect_course_blocks",
+    "detect_categories",
+    "detect_items",
+    "detect_subitems",
+    "validate_structure",
+    "recover_partial_errors",
+    "generate_ids",
+    "map_categories",
+    "serialize_json"
+  ],
+
+  "architectural_principles": {
+    "srp_text_protocol": "human_interface",
+    "srp_schema_v2": "machine_interface",
+    "srp_parser": "translation_layer",
+    "persistence_layer": "stable_structural_storage",
+    "notion_and_srp": "consumer_layers"
+  }
+}
