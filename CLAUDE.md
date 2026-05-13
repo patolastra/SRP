@@ -13,6 +13,88 @@ Responde **siempre en español**, incluyendo:
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## Ecosistema PROFE — Contexto general
+
+SRP es uno de los 5 módulos de un ecosistema pedagógico más amplio ubicado en `APPS BY ME/`:
+
+```
+APPS BY ME/
+├── SRP/                    ← este repositorio (producción)
+├── PRESENTADOR PEDAGÓGICO/ ← renderer de presentaciones offline
+├── CUADERNO MIDI/          ← captura de ideas musicales
+├── METALÓFONO APP/         ← herramienta pedagógica MIDI
+├── LECTOR TABLATURAS/      ← lector de partituras
+├── FLAUTA APP/             ← digitaciones interactivas
+├── HUIRO APP/              ← práctica rítmica
+├── CIFRADO AMERICANO/      ← cifrado de acordes
+└── supabase/               ← config compartida de DB
+```
+
+Los otros módulos planificados (no iniciados): **Portal** (hub de planificación en PC) y **Libro de Clases** (evaluaciones con modo offline).
+
+### Rol dual de SRP
+
+SRP tiene DOS funciones igualmente centrales:
+
+1. **Captura → IA → estructura:** el profesor graba/escribe desde el celular → Gemini parsea → información organizada por curso y categoría
+2. **Visualización inteligente:** el Mundo Izquierdo (Panel) muestra registros procesados + planificaciones que llegan desde el Portal
+
+### Flujo bidireccional SRP ↔ Portal (futuro)
+
+- **SRP → Portal:** grabación → Gemini parsea → pendientes con sesión → aparecen en Portal Dashboard
+- **Portal → SRP:** Portal planifica sesiones futuras → aparecen en el Panel mobile de SRP
+
+### El eje temporal — principio organizador central
+
+Todo se ancla a una **sesión** (contexto + fecha concreta). Los pendientes no pertenecen a un curso en abstracto, sino a una sesión específica. Pendiente sin sesión asignada → va a la próxima clase futura del curso por defecto.
+
+### Los 15 contextos del sistema
+
+| Nombre | Tipo | Día |
+|--------|------|-----|
+| ORIENTACIÓN | jefatura | Lunes |
+| TERCERO | curso | Lunes |
+| CUARTO | curso | Lunes |
+| CUERDAS | taller | Lunes |
+| ENLACE | jefatura | Martes |
+| SEXTO | curso | Martes |
+| RECREO | recreo | Martes |
+| QUINTO | curso | Martes |
+| PRIMERO | curso | Miércoles |
+| SEGUNDO | curso | Jueves |
+| SEPTIMO | curso | Jueves |
+| KIDS CASTIGADAS | taller | Jueves |
+| OCTAVO | curso | Jueves |
+| CASTIGADAS | taller | Jueves |
+| GENERAL | general | — (virtual) |
+
+Jefatura actual: 8° básico. Semana laboral: lunes a jueves (4 días).
+
+### Supabase (capa de persistencia — Fase 3 completa)
+
+La base de datos ya existe y está conectada. Credenciales en `../supabase/config.js`.
+
+Tablas relevantes para SRP:
+- `contextos` — los 15 contextos (ya poblada)
+- `horario` — estructura semanal L-M-M-J (ya poblada)
+- `sesiones` — instancias concretas (contexto + fecha)
+- `sesiones_srp` — registros procesados (reemplaza IndexedDB `historial`)
+- `pendientes` — items parseados con `sesion_id`
+
+**Próximo paso de integración:** reemplazar IndexedDB en `mobile_ui/index.html` por Supabase. Las grabaciones en bandeja se mantienen local (offline-first), se sincronizan al guardar.
+
+### La app mobile (producción)
+
+La UI activa es `mobile_ui/index.html` — una PWA HTML/JS puro con 4 pantallas principales (Captura, Bandeja, Procesamiento, Historial) y el Mundo Izquierdo (panel de lectura). **No es un placeholder** — tiene múltiples overlays y funciones implementadas. El stack es HTML/JS vanilla, sin frameworks, sin build tools.
+
+### IA de parseo
+
+**Gemini** (Google). No migrar a Claude ni OpenAI hasta que el sistema esté completamente estabilizado.
+
+---
+
 ## What This Project Is
 
 **SRP (Sistema de Revisión Pedagógica)** es una herramienta personal para un profesor de música que hace clases en muchos cursos una vez por semana. La complejidad logística y el volumen de información hacen imposible el seguimiento manual. El profesor narra su experiencia en notas de voz (fluir de conciencia), y el sistema extrae, organiza y hace accesible esa información de forma oportuna y ordenada.
@@ -38,12 +120,12 @@ No build system, no package install, no CLI entrypoint yet. The main orchestrati
 from executor.runtime_executor_v1 import RuntimeExecutor
 from executor.runtime_client_v1 import RuntimeClientFactory
 
-client = RuntimeClientFactory.create(provider="openai", model="gpt-4o")
+client = RuntimeClientFactory.create(provider="gemini", model="gemini-pro")
 executor = RuntimeExecutor(client=client)
 result = executor.run(raw_input="...", fixture_name="fixture_001")
 ```
 
-Requires the `openai` package (`pip install openai`) and `OPENAI_API_KEY` set in the environment. The import is optional — the system will raise clearly if OpenAI is unavailable.
+Requiere la API key de Gemini (Google). El cliente activo es `executor/runtime_client_v1.py`.
 
 **Execution traces** are written automatically to `./execution_traces/` as JSON files for every run.
 
@@ -180,8 +262,8 @@ Notas técnicas sobre el estado real del sistema (actualizar a medida que se cor
 
 - **`ContractValidator`** — No valida el contrato real. Necesita reescritura completa.
 - **`DriftClassifier`** — Mayormente vacío. Solo detecta `structural_drift`. Sin detección semántica real.
-- **`runtime_executor_v2.py`** — Tiene un syntax error conocido en línea 351.
 - **Expected outputs** — Son el activo más confiable del proyecto. Fuente de verdad principal.
+- **Bug foto/video en save** — Corregido (2026-05-13). Línea ~3168 de `mobile_ui/index.html`.
 
 ---
 
