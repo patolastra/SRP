@@ -90,11 +90,19 @@ Tablas relevantes para SRP:
 - `sesiones_srp` — registros procesados (reemplaza IndexedDB `historial`)
 - `pendientes` — items parseados con `sesion_id`
 
+**Antes de cualquier integración: leer `../supabase/schema.sql`** — contiene los campos exactos, tipos, constraints e índices de todas las tablas. No asumir estructura sin leerlo.
+
+**Sesiones — se crean on-demand, no se pre-generan.** La tabla `sesiones` tiene `UNIQUE(contexto_id, fecha)`. Cuando se guarda un registro de un curso en una fecha, se crea (o encuentra) la sesión correspondiente. No hay generación automática desde el horario.
+
+**RLS habilitado pero permisivo** — todas las tablas tienen `USING (true) WITH CHECK (true)`. Cualquiera con la anon key puede leer y escribir. Esto es intencional mientras no haya auth. **No endurecer las políticas RLS hasta que exista un sistema de auth real** — hacerlo antes rompe el acceso de la app.
+
 **Próximo paso de integración:** reemplazar IndexedDB en `mobile_ui/index.html` por Supabase. Las grabaciones en bandeja se mantienen local (offline-first), se sincronizan al guardar.
 
 ### La app mobile (producción)
 
 La UI activa es `mobile_ui/index.html` — una PWA HTML/JS puro con 4 pantallas principales (Captura, Bandeja, Procesamiento, Historial) y el Mundo Izquierdo (panel de lectura). **No es un placeholder** — tiene múltiples overlays y funciones implementadas. El stack es HTML/JS vanilla, sin frameworks, sin build tools.
+
+**Arquitectura single-file:** todo el HTML, CSS y JS (~3200 líneas) vive en un solo archivo. Esto es intencional — permite abrir directamente en el navegador sin build tools. No separar en archivos, no agregar bundler.
 
 ### Sub-secciones dentro de SRP (NO módulos independientes)
 
@@ -147,6 +155,17 @@ Estas funciones viven dentro de SRP. No son apps separadas:
 
 **Gemini** (Google). No migrar a Claude ni OpenAI hasta que el sistema esté completamente estabilizado.
 
+**Dos pasos en la app mobile:**
+1. `geminiTranscribe(base64, mimeType, apiKey)` — envía el audio como `inline_data` en base64 → Gemini devuelve texto transcrito
+2. `geminiParseText(transcripcion, apiKey)` — envía el texto → Gemini devuelve JSON parseado según el schema
+
+**Modelos usados (en cascada, si uno falla intenta el siguiente):**
+```
+gemini-2.0-flash-lite → gemini-2.5-flash → gemini-flash-lite-latest → gemini-2.0-flash
+```
+
+**El Python executor solo hace el paso 2** — recibe texto, no audio. La transcripción existe únicamente en la app mobile.
+
 ---
 
 ## What This Project Is
@@ -168,20 +187,27 @@ The architecture is **specification-first**: frozen markdown documents in `freez
 
 ## Running the System
 
-No build system, no package install, no CLI entrypoint yet. The main orchestration code lives in `executor/runtime_executor_v1.py`. To invoke it directly from Python:
+**IMPORTANTE — dos sistemas separados, no conectados:**
+
+| Sistema | Qué es | Estado |
+|---------|--------|--------|
+| `mobile_ui/index.html` | La app de producción. Llama a Gemini directo desde JS en el navegador. | En uso |
+| `executor/runtime_executor_v1.py` | Herramienta CLI para desarrollo y validación del parser. Base del futuro FastAPI (Fase 2). | No conectado a la UI |
+
+El executor Python **no es el backend de la app mobile**. Son tracks paralelos. No modificar el executor asumiendo que afecta la app.
+
+**Para correr el executor Python:**
 
 ```python
 from executor.runtime_executor_v1 import RuntimeExecutor
 from executor.runtime_client_v1 import RuntimeClientFactory
 
-client = RuntimeClientFactory.create(provider="gemini", model="gemini-pro")
+client = RuntimeClientFactory.create(provider="gemini", model="gemini-2.0-flash")
 executor = RuntimeExecutor(client=client)
 result = executor.run(raw_input="...", fixture_name="fixture_001")
 ```
 
-Requiere la API key de Gemini (Google). El cliente activo es `executor/runtime_client_v1.py`.
-
-**Execution traces** are written automatically to `./execution_traces/` as JSON files for every run.
+Requiere la API key de Gemini en el entorno. **Execution traces** se escriben en `./execution_traces/` como JSON (auto-generados, no commiteados).
 
 ---
 
@@ -191,7 +217,7 @@ There is no pytest or unittest setup. Tests are behavioral and fixture-based:
 
 - `fixtures/` — 13 real Spanish-language transcriptions (`.txt`)
 - `expected_outputs/` — Ground-truth JSON for each fixture
-- `freeze/TEST_MATRIX_v1.md` — 80+ assertion checklist (the test spec)
+- `freeze/v1/TEST_MATRIX_v1.md` — 80+ assertion checklist (the test spec)
 - `behavior_tests/PARSER_BEHAVIOR_TESTS_v1.md` — Behavioral scenarios (draft)
 
 To validate a run, compare actual output JSON against the corresponding file in `expected_outputs/` and check against the contract in `freeze/PARSER_OUTPUT_CONTRACT_v1_FREEZE.md`.
