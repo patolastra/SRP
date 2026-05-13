@@ -323,6 +323,20 @@ Notas técnicas sobre el estado real del sistema (actualizar a medida que se cor
 - **`DriftClassifier`** — Mayormente vacío. Solo detecta `structural_drift`. Sin detección semántica real.
 - **Expected outputs** — Son el activo más confiable del proyecto. Fuente de verdad principal.
 - **Bug foto/video en save** — Corregido (2026-05-13). Línea ~3168 de `mobile_ui/index.html`.
+- **Sin auth actualmente** — `mobile_ui/index.html` es accesible a cualquiera con la URL. La API key de Gemini la ingresa el usuario manualmente y se guarda en `localStorage` del dispositivo. No construir nada que asuma autenticación.
+- **Google Drive backup** — Overlay implementado en la Bitácora. Usa una URL de Google Apps Script (web app desplegado por el profesor) guardada en `localStorage` (`drive_endpoint_url`). Sube el JSON del historial automáticamente al guardar. No eliminarlo ni modificarlo sin entender el flujo completo.
+
+### Workflow de refinamiento del modelo
+
+El ciclo de mejora de la IA funciona así:
+1. El profesor graba en la Bitácora
+2. Gemini parsea y muestra resultados en la pantalla de Procesamiento
+3. El profesor edita los resultados directamente en la app (corrige categorías, textos, asignaciones de curso)
+4. Exporta el parseo corregido como expected output (overlay "Exportar como expected output")
+5. Ese par (transcripción original + parseo corregido) se agrega a `fixtures/` + `expected_outputs/`
+6. Estos pares son la fuente de verdad para validar el parser
+
+Los `expected_outputs/` son tan valiosos precisamente porque representan correcciones reales del profesor sobre outputs reales de Gemini — no datos sintéticos.
 
 ---
 
