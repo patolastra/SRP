@@ -201,16 +201,20 @@ To validate a run, compare actual output JSON against the corresponding file in 
 ## Architecture
 
 ```
-executor/          ← Orchestration: invokes LLM, extracts JSON, validates, persists traces
-runtime/           ← Parser runtime behavior spec (PARSER_RUNTIME_v1.md)
-parser_specs/      ← Semantic parsing rules (PARSER_v1_SPEC.md)
-contracts/         ← Machine-enforceable output guarantees
-schemas/           ← SRP_SCHEMA_v1/v2/v3.json (v3 is active)
-freeze/            ← CANONICAL AUTHORITY — frozen, read-only specifications
-prompts/           ← LLM instruction prompts delivered by the executor
-fixtures/          ← Real-world test inputs (Spanish)
-expected_outputs/  ← Ground-truth JSON for each fixture
-execution_traces/  ← Runtime logs (auto-generated, not committed)
+mobile_ui/         ← App mobile activa (PWA HTML/JS). LA UI DE PRODUCCIÓN. Archivo: index.html
+executor/          ← Orchestration: invoca Gemini, extrae JSON, valida, persiste traces
+runtime/           ← Spec de comportamiento del parser en runtime
+parser_specs/      ← Reglas semánticas de parsing
+contracts/         ← Garantías de output exigibles por código
+schemas/           ← VACÍA. El schema activo (v3) vive en freeze/v1/SRP_SCHEMA_v3.json
+freeze/            ← AUTORIDAD CANÓNICA — specs congeladas, solo lectura
+prompts/           ← Prompts ON_*.txt entregados por el executor a Gemini
+fixtures/          ← Transcripciones reales de clases (español)
+expected_outputs/  ← JSON ground-truth por fixture (activo más valioso del proyecto)
+execution_traces/  ← Logs de runtime (auto-generados, no commiteados)
+behavior_tests/    ← Escenarios de comportamiento del parser
+storage/           ← VACÍA. Prevista para blobs locales antes de sync a Supabase
+renderer/          ← VACÍA. Prevista para motor de Presentaciones cuando ese módulo llegue a SRP
 ```
 
 **Layer responsibilities** (strict separation):
