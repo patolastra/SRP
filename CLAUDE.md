@@ -96,6 +96,8 @@ Tablas relevantes para SRP:
 
 **RLS habilitado pero permisivo** — todas las tablas tienen `USING (true) WITH CHECK (true)`. Cualquiera con la anon key puede leer y escribir. Esto es intencional mientras no haya auth. **No endurecer las políticas RLS hasta que exista un sistema de auth real** — hacerlo antes rompe el acceso de la app.
 
+**Decisión de diseño — audio blobs:** se descartan después de transcribir. El audio cumple su función al generar el texto; no se guarda en Supabase Storage ni en el historial. Solo el texto transcrito y el JSON parseado van a Supabase. Las fotos y videos sí se conservan (ya se guardan como blob en `historial`).
+
 **Próximo paso de integración:** reemplazar IndexedDB en `mobile_ui/index.html` por Supabase. Las grabaciones en bandeja se mantienen local (offline-first), se sincronizan al guardar.
 
 ### La app mobile (producción)
