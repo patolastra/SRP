@@ -3483,7 +3483,7 @@ Categorías vacías: array vacío [].`;
                     h.addEventListener('click', () => {
                         const isNowCollapsed = !collapsedDays.has(group);
                         if (isNowCollapsed) collapsedDays.add(group); else collapsedDays.delete(group);
-                        daySection.classList.toggle('day-collapsed', isNowCollapsed);
+                        h.closest('.day-section').classList.toggle('day-collapsed', isNowCollapsed);
                     });
                     daySection.appendChild(h);
                     list.appendChild(daySection);
