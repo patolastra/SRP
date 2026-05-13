@@ -350,7 +350,7 @@ Notas técnicas sobre el estado real del sistema (actualizar a medida que se cor
 - **`ContractValidator`** — No valida el contrato real. Necesita reescritura completa.
 - **`DriftClassifier`** — Mayormente vacío. Solo detecta `structural_drift`. Sin detección semántica real.
 - **Expected outputs** — Son el activo más confiable del proyecto. Fuente de verdad principal.
-- **Bug foto/video en save** — Corregido (2026-05-13). Línea ~3168 de `mobile_ui/index.html`.
+- **Comportamiento de medios al guardar (línea ~3283)** — Al guardar, se eliminan TODOS los photos/videos de `grabaciones` (no solo los del lote procesado). Es intencional: se guardan en `historial` vía `mediaSnapshot` antes de ese paso. No modificar sin entender el flujo completo.
 - **Sin auth actualmente** — `mobile_ui/index.html` es accesible a cualquiera con la URL. La API key de Gemini la ingresa el usuario manualmente y se guarda en `localStorage` del dispositivo. No construir nada que asuma autenticación.
 - **Google Drive backup** — Overlay implementado en la Bitácora. Usa una URL de Google Apps Script (web app desplegado por el profesor) guardada en `localStorage` (`drive_endpoint_url`). Sube el JSON del historial automáticamente al guardar. No eliminarlo ni modificarlo sin entender el flujo completo.
 
