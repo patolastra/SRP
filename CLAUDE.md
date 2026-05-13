@@ -34,6 +34,13 @@ APPS BY ME/
 
 Los otros módulos planificados (no iniciados): **Portal** (hub de planificación en PC) y **Libro de Clases** (evaluaciones con modo offline).
 
+### Vocabulario clave
+
+| Término | Qué es |
+|---------|--------|
+| **Bitácora** | Todo el mundo derecho: captura de voz/texto/foto/video, bandeja, procesamiento con Gemini, historial. Es el flujo de registro y parseo. |
+| **Panel** | El Mundo Izquierdo: vista de lectura que muestra cursos del día, pendientes por categoría, materiales, nota de sesión. Acceso con swipe desde Captura. |
+
 ### Rol dual de SRP
 
 SRP tiene DOS funciones igualmente centrales:
@@ -88,6 +95,53 @@ Tablas relevantes para SRP:
 ### La app mobile (producción)
 
 La UI activa es `mobile_ui/index.html` — una PWA HTML/JS puro con 4 pantallas principales (Captura, Bandeja, Procesamiento, Historial) y el Mundo Izquierdo (panel de lectura). **No es un placeholder** — tiene múltiples overlays y funciones implementadas. El stack es HTML/JS vanilla, sin frameworks, sin build tools.
+
+### Sub-secciones dentro de SRP (NO módulos independientes)
+
+Estas funciones viven dentro de SRP. No son apps separadas:
+
+| Sub-sección | Descripción | Acceso |
+|-------------|-------------|--------|
+| **Repertorio** | 4 estados: posible / en_curso / visto / aprender | Drawer |
+| **Captura de ideas** | URL/imagen/texto/voz; estados: nueva/revisada/implementada/descartada; etiquetable a contextos | Drawer |
+| **Bienestar** | Cuotas de 20-40 funcionarios, pagos, balance mensual | Drawer |
+| **Jefatura** | Apoderados, reuniones, actas (actualmente 8° básico, reasignable) | Drawer |
+| **Administrativos / Casa / Mensajes / Apps** | Vistas globales de cada categoría SRP | Drawer |
+| **Planificaciones** | Sesiones futuras creadas en el Portal que fluyen al Panel | Drawer |
+
+### Estructura de navegación de la app mobile (`mobile_ui/index.html`)
+
+**Bitácora — 4 pantallas con swipe vertical:**
+1. **Captura** — graba audio, texto, foto, video. Swipe izquierdo → Panel
+2. **Bandeja** — lista de grabaciones del día agrupadas por fecha. Swipe horizontal: borrar o regrabar
+3. **Procesamiento / Resultados** — envía bandeja a Gemini, muestra items parseados. Permite editar, cambiar categoría, marcar OK, deshacer, guardar
+4. **Historial** — registros SRP guardados, navegables por fecha y curso
+
+**Panel (Mundo Izquierdo) — 3 vistas:**
+- Vista de día: cursos del día seleccionado (navegación semanal ‹ ›)
+- Vista de curso: pendientes por categoría + materiales (pull-down) + nota de sesión editable
+- Vista lista genérica: categorías globales o historial de curso
+
+**Drawer (menú ···):** accesos directos a Cursos, Planificaciones, Repertorio, Mensajes, Jefatura, Administrativos, Casa, Apps.
+
+**Overlays implementados:** configuración API key Gemini, backup Google Drive, exportar expected output, foto/video con etiquetado de curso, category picker, modo selección múltiple, lightbox, source audio.
+
+### Almacenamiento actual (antes de Supabase)
+
+**IndexedDB** — base de datos: `SRP_VozDB` (versión 3), 3 stores:
+
+| Store | Contenido |
+|-------|-----------|
+| `grabaciones` | Items de Bandeja: audio (blob), texto, foto, video. Campos: `{id, blob, timestamp, timeStr, dateGroup, type, textContent, enProceso}` |
+| `historial` | Registros procesados y guardados: `{id, timestamp, data, media}`. Las fotos se guardan como blob aquí. → Migrar a tabla `sesiones_srp` en Supabase |
+| `expected_outputs` | Fixtures generados desde la app: `{id, timestamp, fixture_name, json, raw_fixtures}` |
+
+**localStorage** solo guarda: `gemini_api_key`, `drive_endpoint_url`, `srp_pending_results` (estado temporal entre pantallas).
+
+**Plan de migración a Supabase:**
+- `grabaciones` → mantener local (offline-first), sincronizar al guardar
+- `historial` → tabla `sesiones_srp`
+- Pendientes parseados → tabla `pendientes` con `sesion_id`
 
 ### IA de parseo
 
@@ -260,6 +314,7 @@ Every parser output must include these root fields:
 
 Notas técnicas sobre el estado real del sistema (actualizar a medida que se corrijan):
 
+- **Bug arquitectural — eje temporal:** los pendientes actualmente no tienen `sesion_id` real. Aparecen en todas las vistas de un curso sin distinción temporal (bug conocido). Se resuelve con la integración a Supabase — no intentar parcharlo en IndexedDB.
 - **`ContractValidator`** — No valida el contrato real. Necesita reescritura completa.
 - **`DriftClassifier`** — Mayormente vacío. Solo detecta `structural_drift`. Sin detección semántica real.
 - **Expected outputs** — Son el activo más confiable del proyecto. Fuente de verdad principal.
