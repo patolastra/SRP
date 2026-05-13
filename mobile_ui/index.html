@@ -72,22 +72,36 @@
 
         /* ── PANTALLA 2: BANDEJA ── */
         #inbox-view { background: var(--bg); overflow-y: auto; padding: 40px 15px; -webkit-overflow-scrolling: touch; }
-        .day-title  { color: var(--warning); font-size: 1.4rem; font-weight: 900; margin: 16px 0 10px; padding: 0 20px; letter-spacing: -0.3px; }
+        .day-title  { color: var(--warning); font-size: 1.4rem; font-weight: 900; margin: 16px 0 10px; padding: 0 20px; letter-spacing: -0.3px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .day-title .day-chevron { font-size: 1rem; opacity: 0.6; transition: transform 0.25s; }
+        .day-section.day-collapsed .day-chevron { transform: rotate(-90deg); }
+        .day-section.day-collapsed .audio-wrapper { display: none; }
         .day-section    { margin: 0 -15px; padding: 6px 0 20px; }
         .day-section-0  { background: #0D1017; }
         .day-section-1  { background: #161B21; }
         .day-section-0 .audio-card { background: #0D1017; }
         .day-section-1 .audio-card { background: #161B21; }
-        .audio-wrapper  { position: relative; margin-bottom: 0; border-radius: 0; overflow: hidden; background: transparent; border-bottom: 1px solid rgba(255,255,255,0.38); }
-        .day-section .audio-wrapper:last-child { border-bottom: none; }
+        .audio-wrapper  { position: relative; margin-bottom: 0; border-radius: 0; overflow: hidden; background: transparent; }
+        .audio-wrapper::after { content: ''; position: absolute; bottom: 0; left: 4px; right: 4px; height: 1px; background: rgba(100, 175, 255, 0.45); pointer-events: none; }
+        .day-section .audio-wrapper:last-child::after { display: none; }
+
+        /* ── Compactación bandeja (scoped a .audio-wrapper) ── */
+        .audio-wrapper .audio-card          { padding: 9px 13px; }
+        .audio-wrapper .player-content      { gap: 4px; }
+        .audio-wrapper .audio-time-label    { font-size: 0.78rem; }
+        .audio-wrapper .player-bottom       { font-size: 0.67rem; }
+        .audio-wrapper .seekbar-container   { height: 22px; }
+        /* Texto colapsado a altura fija, expandible con click */
+        .audio-wrapper .audio-card.text-card           { height: 80px; overflow: hidden; transition: height 0.3s ease; cursor: pointer; }
+        .audio-wrapper .audio-card.text-card.expanded  { overflow: visible; }
         .swipe-action   { position: absolute; top: 0; bottom: 0; width: 100%; display: flex; align-items: center; padding: 0 30px; font-weight: 900; font-size: 1.3rem; color: white; opacity: 0; transition: opacity 0.1s; }
         .swipe-delete   { background: var(--danger);  justify-content: flex-end; z-index: 0; }
         .swipe-record   { background: var(--success); justify-content: flex-start; z-index: 0; }
-        .audio-card     { background: var(--card); padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; position: relative; z-index: 2; transition: transform 0.5s cubic-bezier(0.175,.885,.32,1.275); border: none; will-change: transform; }
+        .audio-card     { background: var(--card); padding: 14px 16px; display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; transition: transform 0.5s cubic-bezier(0.175,.885,.32,1.275); border: none; will-change: transform; user-select: none; -webkit-user-select: none; }
         .card-highlight { background: #1c2128 !important; border-color: var(--success) !important; }
         .audio-time-label { font-size: 1rem; font-weight: 800; color: #f0f6fc; }
         .player-top     { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .tag-regrabado  { font-size: 0.7rem; background: rgba(0,168,132,.15); color: var(--success); padding: 4px 10px; border-radius: 6px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,168,132,.2); }
+        .tag-regrabado  { font-size: 0.6rem; background: rgba(0,168,132,.15); color: var(--success); padding: 2px 7px; border-radius: 6px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,168,132,.2); }
         .play-btn       { width: 54px; height: 54px; border-radius: 50%; background: var(--accent); border: none; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
         .play-btn svg   { display: block; }
         .player-content { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
@@ -96,8 +110,7 @@
         .player-bottom  { display: flex; justify-content: space-between; font-size: 1rem; font-weight: 600; color: var(--text-dim); font-variant-numeric: tabular-nums; }
         .seekbar-row    { display: flex; align-items: center; gap: 10px; }
         .seekbar-row .seekbar-container { flex: 1; width: auto; }
-        .speed-chip     { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.2); color: var(--text-dim); border-radius: 14px; padding: 5px 11px; font-size: 0.82rem; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; transition: all 0.15s; }
-        .speed-chip.speed-active { color: var(--accent); border-color: var(--accent); background: rgba(0,122,255,.1); }
+        .speed-chip     { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.2); color: var(--text-dim); border-radius: 14px; padding: 5px 11px; font-size: 0.82rem; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; transition: all 0.15s; min-width: 3.2em; text-align: center; }
         .media-edit-btn { background: none; border: 1px solid rgba(255,255,255,.15); color: var(--text-dim); border-radius: 10px; padding: 5px 11px; font-size: 0.78rem; font-weight: 900; cursor: pointer; flex-shrink: 0; }
 
         /* ── PANTALLA 3: PROCESAMIENTO / RESULTADOS ── */
@@ -153,11 +166,16 @@
 
         .item-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 5px; padding: 0 8px; z-index: 1; }
         .ia-btn { border: none; border-radius: 10px; padding: 10px 11px; font-size: 0.78rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
-        .ia-edit { background: var(--accent); color: white; }
-        .ia-move { background: var(--gray); color: var(--text); border: 1px solid var(--border); }
-        .ia-del  { background: rgba(255,59,48,.15); color: var(--danger); border: 1px solid rgba(255,59,48,.3); }
+        .ia-edit      { background: var(--accent); color: white; }
+        .ia-ok        { background: var(--gray); color: var(--text-dim); border: 1px solid var(--border); }
+        .ia-ok.active { background: rgba(0,168,132,.18); color: var(--success); border-color: rgba(0,168,132,.4); }
+        .ia-del       { background: rgba(255,59,48,.15); color: var(--danger); border: 1px solid rgba(255,59,48,.3); }
 
         .item-card { position: relative; z-index: 2; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; will-change: transform; transition: transform 0.35s cubic-bezier(0.175,.885,.32,1.275); }
+        .item-card.is-ok { border-color: rgba(0,168,132,.4); }
+        .ok-check { color: var(--success); font-weight: 900; font-size: 0.8rem; margin-top: 6px; display: inline-block; }
+        .item-multicat-chip { cursor: pointer; }
+        .srp-state-header { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; padding: 18px 20px 4px; opacity: 0.5; }
         .item-card.open { border-color: var(--accent); }
         .item-cat-tag  { display: inline-flex; align-items: center; gap: 5px; font-size: 0.62rem; font-weight: 900; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; background: var(--gray); border-radius: 6px; padding: 3px 8px; }
         .item-text-display { font-size: 1rem; color: var(--text); line-height: 1.5; }
@@ -212,7 +230,8 @@
 
         /* ── CARDS BANDEJA ── */
         .text-card  { background: var(--card); padding: 20px 25px; position: relative; z-index: 2; border: 1px solid var(--border); will-change: transform; transition: transform 0.5s cubic-bezier(0.175,.885,.32,1.275); }
-        .text-card-preview { font-size: 1rem; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+        .text-card-preview { font-size: 0.9rem; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .audio-card.text-card.expanded .text-card-preview { -webkit-line-clamp: unset; display: block; overflow: visible; }
         .text-card-time { font-size: 1rem; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; }
         .media-card { background: var(--card); position: relative; z-index: 2; border: 1px solid var(--border); will-change: transform; transition: transform 0.5s cubic-bezier(0.175,.885,.32,1.275); overflow: hidden; }
         .media-thumb { width: 100%; height: 180px; object-fit: cover; display: block; }
@@ -289,6 +308,19 @@
 
         .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: var(--gray); backdrop-filter: blur(20px); padding: 15px 35px; border-radius: 40px; font-weight: 900; z-index: 10000; color: white; border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,.5); white-space: nowrap; }
 
+        /* ── MODO SELECCIÓN ── */
+        .tag-en-proceso { font-size: 0.6rem; background: rgba(0,168,132,.2); color: var(--success); padding: 2px 7px; border-radius: 6px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,168,132,.4); }
+        .sel-indicator { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; flex-shrink: 0; pointer-events: none; position: relative; }
+        .selection-mode .sel-indicator { border-color: rgba(255,255,255,.3); }
+        .selection-mode .sel-indicator.is-selected { background: var(--accent); border-color: var(--accent); }
+        .selection-mode .sel-indicator.is-selected::after { content: '✓'; position: absolute; inset: 0; color: white; font-size: 0.72rem; font-weight: 900; line-height: 18px; text-align: center; }
+        #sel-banner { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 2px solid var(--accent); padding: 14px 16px 30px; display: none; align-items: center; gap: 10px; z-index: 400; box-shadow: 0 -6px 24px rgba(0,0,0,.5); }
+        #sel-banner.visible { display: flex; }
+        #sel-count { flex: 1; font-size: 0.9rem; font-weight: 800; color: var(--text); }
+        #sel-process-btn { background: var(--accent); border: none; color: white; padding: 11px 18px; border-radius: 20px; font-weight: 900; font-size: 0.9rem; cursor: pointer; }
+        #sel-process-btn:disabled { background: #333; color: #666; }
+        #sel-cancel-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 11px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+
         /* ── MUNDO IZQUIERDO ── */
         #left-world { position: fixed; inset: 0; background: var(--bg); transform: translateX(-100%); transition: transform 0.42s cubic-bezier(0.2,1,0.2,1); z-index: 600; overflow: hidden; }
         #left-world.active { transform: translateX(0); }
@@ -334,6 +366,28 @@
         .lw-empty { color: var(--text-dim); font-size: 1.02rem; padding: 6px 0 10px; }
         .lw-revision-text { color: var(--text-dim); font-size: 1.1rem; line-height: 1.65; padding: 6px 0 10px; }
         .lw-revision-date { font-size: 0.87rem; color: var(--text-dim); opacity: .6; margin-bottom: 4px; }
+
+        /* ── NAPP: nota inline ,,,n (renderizada en posición dentro del texto) ── */
+        .napp-inline-note { font-style: italic; color: var(--warning); }
+
+        /* ── SESSION NOTE CARD ── */
+        .session-note-card { margin: 0 0 18px; padding: 14px 18px; background: var(--card); border: 1px dashed rgba(201,151,26,.35); border-radius: 14px; cursor: pointer; }
+        .session-note-empty { color: var(--text-dim); font-size: 0.88rem; opacity: .55; display: flex; align-items: center; gap: 7px; }
+        .session-note-content { font-weight: 900; font-size: 1rem; color: white; line-height: 1.4; }
+        .session-note-label { font-size: 0.68rem; font-weight: 800; color: var(--warning); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; opacity: .7; }
+        .session-note-edit-area { width: 100%; background: transparent; border: none; color: var(--text); font-size: 1rem; font-family: inherit; resize: none; outline: none; min-height: 64px; line-height: 1.5; }
+        .session-note-controls { display: flex; gap: 10px; margin-top: 8px; }
+        .session-note-save   { background: var(--accent); border: none; color: white; padding: 8px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.85rem; }
+        .session-note-cancel { background: none; border: none; color: var(--text-dim); padding: 8px; cursor: pointer; font-size: 0.85rem; }
+
+        /* ── SOURCE AUDIO OVERLAY ── */
+        #source-audio-overlay { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 20px 20px 34px; z-index: 9500; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.2,1,0.2,1); }
+        #source-audio-overlay.visible { transform: translateY(0); }
+        .sao-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .sao-label { color: var(--text-dim); font-size: 0.85rem; font-weight: 700; }
+        .sao-close { background: none; border: none; color: var(--text-dim); font-size: 1.4rem; cursor: pointer; padding: 0; line-height: 1; }
+        .sao-text { color: var(--text); font-size: 0.95rem; line-height: 1.55; padding: 12px 14px; background: var(--gray); border-radius: 10px; max-height: 130px; overflow-y: auto; }
+        #sao-content .audio-card { border-radius: 14px; border: 1px solid var(--border); }
 
         /* Lista genérica (categorías globales / historial curso) */
         #lw-list-view { position: absolute; inset: 0; background: var(--bg); transform: translateX(100%); transition: transform 0.42s cubic-bezier(0.2,1,0.2,1); display: flex; flex-direction: column; z-index: 640; }
@@ -590,6 +644,15 @@
     <button id="lightbox-close" onclick="closeLightbox()">✕</button>
 </div>
 
+<!-- Reproductor de nota original (doble tap en ítem del informe) -->
+<div id="source-audio-overlay">
+    <div class="sao-header">
+        <span class="sao-label" id="sao-label">Nota original</span>
+        <button class="sao-close" onclick="closeSourceAudio()">✕</button>
+    </div>
+    <div id="sao-content"></div>
+</div>
+
 <!-- Category picker -->
 <div class="cat-picker-overlay" id="cat-picker-overlay">
     <div class="cat-picker-sheet">
@@ -598,6 +661,13 @@
         <button id="cat-picker-confirm" class="cat-picker-confirm" onclick="executeMultiCatAction()" style="display:none" disabled>Mover a seleccionadas</button>
         <button class="cat-picker-cancel" onclick="closeCatPicker()">Cancelar</button>
     </div>
+</div>
+
+<!-- Banner de selección -->
+<div id="sel-banner">
+    <span id="sel-count">0 seleccionados</span>
+    <button id="sel-process-btn" onclick="processSelectedWithGemini()" disabled>⚡ Procesar</button>
+    <button id="sel-cancel-btn" onclick="exitSelectionMode()">Cancelar</button>
 </div>
 
 <script>
@@ -638,12 +708,235 @@
     // ESTADO
     // ============================================================
     let srpResults = [];
+    let sessionNote = '';
     let originalParseSnapshot = null;
-    let audioTranscriptions = {}; // item.id → texto transcripto (fixture crudo de audio)
+    let audioTranscriptions = {};
     let procErrors = [];
     let pendingMediaCategories = {};
     let undoStack = [];
     let catPickerState = null;
+
+    // ── Modo selección ──
+    let selectionMode = false;
+    let selectedIds = new Set();
+    let processedItemIds = new Set();
+
+    // ── Días colapsados en bandeja ──
+    let collapsedDays = new Set();
+
+    // ============================================================
+    // MODO SELECCIÓN
+    // ============================================================
+    function enterSelectionMode(itemId) {
+        selectionMode = true;
+        selectedIds = new Set();
+        document.getElementById('inbox-view').classList.add('selection-mode');
+        document.getElementById('sel-banner').classList.add('visible');
+        if (itemId != null) { selectedIds.add(itemId); updateSelCircle(itemId); }
+        updateSelBanner();
+    }
+
+    function exitSelectionMode() {
+        selectionMode = false;
+        selectedIds = new Set();
+        document.getElementById('inbox-view').classList.remove('selection-mode');
+        document.getElementById('sel-banner').classList.remove('visible');
+        document.querySelectorAll('.sel-indicator.is-selected').forEach(el => el.classList.remove('is-selected'));
+    }
+
+    function toggleSelection(itemId) {
+        if (selectedIds.has(itemId)) selectedIds.delete(itemId);
+        else selectedIds.add(itemId);
+        updateSelCircle(itemId);
+        updateSelBanner();
+    }
+
+    function updateSelCircle(itemId) {
+        const el = document.getElementById(`sel-ind-${itemId}`);
+        if (el) el.classList.toggle('is-selected', selectedIds.has(itemId));
+    }
+
+    function updateSelBanner() {
+        const n = selectedIds.size;
+        document.getElementById('sel-count').textContent = n === 1 ? '1 seleccionado' : `${n} seleccionados`;
+        document.getElementById('sel-process-btn').disabled = n === 0;
+    }
+
+    async function resetEnProceso(itemId) {
+        if (!db) return;
+        const tx = db.transaction(['grabaciones'], 'readwrite');
+        const store = tx.objectStore('grabaciones');
+        const req = store.get(itemId);
+        req.onsuccess = e => {
+            const item = e.target.result;
+            if (item) { item.enProceso = false; store.put(item); }
+        };
+        tx.oncomplete = () => renderRecordings();
+    }
+
+    // ── Persistencia de resultados (recuperación tras cierre) ──
+    function persistPendingResults() {
+        try {
+            localStorage.setItem('srp_pending_results', JSON.stringify({
+                srpResults: JSON.parse(JSON.stringify(srpResults)),
+                sessionNote,
+                audioTranscriptions: { ...audioTranscriptions },
+                originalParseSnapshot: originalParseSnapshot ? JSON.parse(JSON.stringify(originalParseSnapshot)) : null,
+                procErrors: JSON.parse(JSON.stringify(procErrors)),
+                processedItemIds: Array.from(processedItemIds)
+            }));
+        } catch (e) { /* localStorage lleno — continúa sin persistir */ }
+    }
+
+    function clearPendingResults() {
+        localStorage.removeItem('srp_pending_results');
+        processedItemIds = new Set();
+        sessionNote = '';
+    }
+
+    async function recoverPendingResults() {
+        const raw = localStorage.getItem('srp_pending_results');
+        if (!raw) { await clearOrphanedEnProceso(); return; }
+        try {
+            const saved = JSON.parse(raw);
+            if (!saved.srpResults?.length) { clearPendingResults(); return; }
+            srpResults  = saved.srpResults;
+            sessionNote = saved.sessionNote || '';
+            audioTranscriptions = saved.audioTranscriptions || {};
+            originalParseSnapshot = saved.originalParseSnapshot || null;
+            procErrors = saved.procErrors || [];
+            processedItemIds = new Set(saved.processedItemIds || []);
+            renderSRPResults();
+            await renderMediaTaggers();
+            if (procErrors.length) renderProcErrors();
+            showProcResults(true);
+            showToast('Resultados pendientes recuperados');
+        } catch (e) {
+            clearPendingResults();
+            await clearOrphanedEnProceso();
+        }
+    }
+
+    async function clearOrphanedEnProceso() {
+        if (!db) return;
+        const items = await new Promise(res => {
+            db.transaction('grabaciones', 'readonly').objectStore('grabaciones').getAll().onsuccess = e => res(e.target.result);
+        });
+        const orphans = items.filter(i => i.enProceso);
+        if (!orphans.length) return;
+        const tx = db.transaction(['grabaciones'], 'readwrite');
+        const store = tx.objectStore('grabaciones');
+        orphans.forEach(item => { item.enProceso = false; store.put(item); });
+        await new Promise(res => { tx.oncomplete = res; });
+        renderRecordings();
+    }
+
+    // ── Procesar selección ──
+    async function processSelectedWithGemini() {
+        if (!selectedIds.size) return;
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) { exitSelectionMode(); openApiKeyOverlay(true); return; }
+
+        const allItems = await new Promise(res => {
+            db.transaction('grabaciones', 'readonly').objectStore('grabaciones').getAll().onsuccess = e => res(e.target.result);
+        });
+        const processableItems = allItems
+            .filter(i => selectedIds.has(i.id) && ((i.type || 'audio') === 'audio' || i.type === 'text'))
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        exitSelectionMode();
+        if (!processableItems.length) { showToast('No hay notas de voz ni texto en la selección'); return; }
+
+        clearPendingResults();
+        resetProcView();
+        moveScreen(2);
+
+        const btn = document.getElementById('proc-btn');
+        const progress = document.getElementById('proc-progress');
+        btn.disabled = true;
+
+        // Limpiar flags previos + marcar nuevos como EN PROCESO
+        const clearTx = db.transaction(['grabaciones'], 'readwrite');
+        const clearStore = clearTx.objectStore('grabaciones');
+        allItems.filter(i => i.enProceso).forEach(i => { i.enProceso = false; clearStore.put(i); });
+        await new Promise(res => { clearTx.oncomplete = res; });
+
+        const markTx = db.transaction(['grabaciones'], 'readwrite');
+        const markStore = markTx.objectStore('grabaciones');
+        processableItems.forEach(i => { i.enProceso = true; markStore.put(i); });
+        await new Promise(res => { markTx.oncomplete = res; });
+        processedItemIds = new Set(processableItems.map(i => i.id));
+        renderRecordings();
+
+        srpResults = [];
+        procErrors = [];
+        audioTranscriptions = {};
+
+        for (let i = 0; i < processableItems.length; i++) {
+            const item = processableItems[i];
+            const typeLabel = item.type === 'text' ? '📝 Nota de texto' : '🎙 Nota de voz';
+            const timeLabel = item.timestamp ? new Date(item.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '';
+            try {
+                let transcription;
+                if (item.type === 'text') {
+                    transcription = item.textContent || '';
+                    audioTranscriptions[item.id] = transcription;
+                    progress.textContent = `Parseando ${i + 1} de ${processableItems.length}...`;
+                } else {
+                    progress.textContent = `Transcribiendo ${i + 1} de ${processableItems.length}...`;
+                    const base64 = await blobToBase64(item.blob);
+                    const mimeType = (item.blob.type || 'audio/webm').split(';')[0].trim();
+                    transcription = await geminiTranscribe(base64, mimeType, apiKey);
+                    audioTranscriptions[item.id] = transcription;
+                    progress.textContent = `Parseando ${i + 1} de ${processableItems.length}...`;
+                }
+                const sourcePreview = transcription.substring(0, 90).trim() || null;
+                const courses = await geminiParseText(transcription, apiKey);
+                courses.forEach(c => {
+                    c._sourceLabel = typeLabel + (timeLabel ? ' · ' + timeLabel : '');
+                    if (sourcePreview) c._sourcePreview = sourcePreview;
+                    c._sourceAudioId = item.id;
+                    c._sourceItemType = item.type;
+                    // Propagar fuente a cada ítem para que sobreviva el merge de cursos
+                    Object.values(c.categories || {}).forEach(arr =>
+                        arr.forEach(i => { i._sourceAudioId = item.id; i._sourceItemType = item.type; })
+                    );
+                    srpResults.push(c);
+                });
+            } catch (e) {
+                const msg = e.message || '';
+                let friendlyMsg;
+                if (msg.includes('not found') || msg.includes('not supported') || msg.includes('404'))
+                    friendlyMsg = 'Modelo no disponible. Verifica que tu API key tenga acceso a Gemini Flash.';
+                else if (msg.includes('API_KEY') || msg.includes('401') || msg.includes('403') || msg.includes('invalid'))
+                    friendlyMsg = 'API key inválida o sin permisos.';
+                else if (msg.includes('quota') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED'))
+                    friendlyMsg = 'Límite de uso alcanzado. La nota quedó en la bandeja — reintenta en unos minutos.';
+                else if (msg.includes('Failed to fetch') || msg.includes('network') || msg.includes('NetworkError'))
+                    friendlyMsg = 'Sin conexión. La nota quedó en la bandeja.';
+                else if (msg.includes('JSON') || msg.includes('parse') || msg.includes('SyntaxError'))
+                    friendlyMsg = 'Gemini respondió en formato inesperado. La nota quedó en la bandeja.';
+                else
+                    friendlyMsg = 'Error al procesar. La nota quedó en la bandeja.';
+                procErrors.push({ label: typeLabel + (timeLabel ? ' · ' + timeLabel : ''), message: friendlyMsg, rawMsg: msg, itemId: item.id, preview: audioTranscriptions[item.id]?.substring(0, 90) || null });
+                if (e.message?.includes('API_KEY')) {
+                    localStorage.removeItem('gemini_api_key');
+                    btn.disabled = false;
+                    openApiKeyOverlay(true);
+                    return;
+                }
+            }
+        }
+
+        progress.textContent = '';
+        btn.disabled = false;
+        originalParseSnapshot = JSON.parse(JSON.stringify(srpResults));
+        persistPendingResults();
+        renderSRPResults();
+        renderProcErrors();
+        showProcResults(true);
+        showToast(procErrors.length ? `${procErrors.length} nota(s) con error` : 'Parseo listo ✓');
+    }
 
     // ============================================================
     // PARSER
@@ -745,6 +1038,19 @@
             return;
         }
 
+        // Nota de sesión (fixture-level)
+        const snCard = document.createElement('div');
+        snCard.className = 'session-note-card';
+        const snTrigger = document.createElement('div');
+        if (sessionNote) {
+            snTrigger.innerHTML = `<div class="session-note-label">📋 Nota de sesión</div><div class="session-note-content">${sessionNote}</div>`;
+        } else {
+            snTrigger.innerHTML = `<div class="session-note-empty">📋 Agregar nota de sesión</div>`;
+        }
+        snTrigger.addEventListener('click', () => openSessionNoteEdit(snCard));
+        snCard.appendChild(snTrigger);
+        container.appendChild(snCard);
+
         srpResults.forEach((course, courseIdx) => {
             const header = document.createElement('div');
             header.className = 'srp-course-header';
@@ -777,15 +1083,36 @@
                 });
             });
             const renderedTexts = new Set();
-
+            const allUniqueItems = [];
             ALL_CATS.forEach(cat => {
-                const items = (course.categories[cat.id] || []).filter(item => !renderedTexts.has(item.text));
-                if (!items.length) return;
+                (course.categories[cat.id] || []).forEach(item => {
+                    if (!renderedTexts.has(item.text)) {
+                        renderedTexts.add(item.text);
+                        allUniqueItems.push({ item, catId: cat.id });
+                    }
+                });
+            });
 
-                items.forEach(item => {
-                    renderedTexts.add(item.text);
+            const pending = allUniqueItems.filter(({ item }) => !item._ok && !item._edited);
+            const edited  = allUniqueItems.filter(({ item }) => !item._ok &&  item._edited);
+            const ok      = allUniqueItems.filter(({ item }) =>  item._ok);
+            const hasGroups = edited.length > 0 || ok.length > 0;
+
+            [
+                { items: pending, label: hasGroups ? 'Por revisar' : null },
+                { items: edited,  label: 'Editado' },
+                { items: ok,      label: 'Listo ✓' }
+            ].forEach(({ items, label }) => {
+                if (!items.length) return;
+                if (label) {
+                    const sec = document.createElement('div');
+                    sec.className = 'srp-state-header';
+                    sec.textContent = label;
+                    container.appendChild(sec);
+                }
+                items.forEach(({ item, catId }) => {
                     const allCatIds = textToCats.get(item.text);
-                    container.appendChild(createItemCard(item, cat.id, courseIdx, allCatIds));
+                    container.appendChild(createItemCard(item, catId, courseIdx, allCatIds));
                 });
             });
 
@@ -824,6 +1151,9 @@
                 container.appendChild(warn);
             }
         });
+
+        // Restaurar sección de fotos si hay medios en esta sesión
+        if (Object.keys(pendingMediaCategories).length > 0) renderMediaTaggers();
     }
 
     function appendCourseMedia(container, courseName) {
@@ -873,6 +1203,152 @@
     }
 
     // ============================================================
+    // NAPP: anotaciones ,,,n ... n,,, en texto de ítems
+    // ============================================================
+    function parseNapp(text) {
+        // Reemplaza todos los NAPPs cerrados: ,,,n ... n,,,  (o N,,,)
+        let html = text.replace(/,,,n([\s\S]*?)[nN],,,/g, (_, note) =>
+            `<em class="napp-inline-note">[${note.trim()}]</em>`
+        );
+        // Reemplaza NAPP abierto al final (sin cierre n,,,)
+        html = html.replace(/,,,n([\s\S]*)$/, (_, note) =>
+            `<em class="napp-inline-note">[${note.trim()}]</em>`
+        );
+        return html;
+    }
+
+    // ============================================================
+    // SESSION NOTE: nota a nivel de fixture completo
+    // ============================================================
+    function openSessionNoteEdit(card) {
+        // Reemplaza el trigger (que tenía el listener) — el card en sí nunca tiene listener
+        card.innerHTML = `
+            <div class="session-note-label">📋 Nota de sesión</div>
+            <textarea class="session-note-edit-area" placeholder="Nota sobre este parseo completo...">${sessionNote}</textarea>
+            <div class="session-note-controls">
+                <button class="session-note-save">Guardar</button>
+                <button class="session-note-cancel">Cancelar</button>
+            </div>`;
+        const ta = card.querySelector('.session-note-edit-area');
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+        card.querySelector('.session-note-save').addEventListener('click', () => {
+            sessionNote = ta.value.trim();
+            persistPendingResults();
+            renderSRPResults();
+        });
+        card.querySelector('.session-note-cancel').addEventListener('click', () => renderSRPResults());
+    }
+
+    // ============================================================
+    // SOURCE AUDIO: reproduce nota original desde el informe
+    // ============================================================
+    function buildSaoPlayer(blob) {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `
+            <div class="audio-card">
+                <button class="play-btn state-play">${SVG_PLAY}</button>
+                <div class="player-content">
+                    <div class="seekbar-row">
+                        <div class="seekbar-container"></div>
+                        <button class="speed-chip">x1</button>
+                    </div>
+                    <div class="player-bottom"><span class="curr">0:00</span><span class="total">0:00</span></div>
+                </div>
+            </div>`;
+        const card      = wrap.querySelector('.audio-card');
+        const seekbar   = card.querySelector('.seekbar-container');
+        const playBtn   = card.querySelector('.play-btn');
+        const currLabel = card.querySelector('.curr');
+        const speedBtn  = card.querySelector('.speed-chip');
+        const aud       = new Audio(URL.createObjectURL(blob));
+
+        generateWaveform(blob, seekbar);
+
+        const speeds = [1, 1.5, 2];
+        let speedIdx = 0;
+        speedBtn.style.visibility = 'hidden';
+        speedBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            speedIdx = (speedIdx + 1) % speeds.length;
+            aud.playbackRate = speeds[speedIdx];
+            speedBtn.textContent = `x${speeds[speedIdx]}`;
+        });
+
+        let playing = false;
+        function setPlay(p) {
+            playing = p;
+            playBtn.innerHTML = p ? SVG_PAUSE : SVG_PLAY;
+            playBtn.className = p ? 'play-btn state-pause' : 'play-btn state-play';
+            speedBtn.style.visibility = p ? '' : 'hidden';
+        }
+
+        aud.onloadedmetadata = () => { card.querySelector('.total').innerText = fmt(aud.duration); };
+        aud.ontimeupdate = () => {
+            const pct  = aud.currentTime / aud.duration;
+            const bars = seekbar.querySelectorAll('.wave-bar');
+            const active = Math.floor(pct * bars.length);
+            bars.forEach((b, i) => b.style.backgroundColor = i <= active ? 'var(--accent)' : '#30363d');
+            currLabel.innerText = fmt(aud.currentTime);
+        };
+        aud.onended  = () => { setPlay(false); aud.currentTime = 0; speedIdx = 0; aud.playbackRate = 1; speedBtn.textContent = 'x1'; };
+        aud.onplay   = () => setPlay(true);
+        aud.onpause  = () => { if (!aud.ended) setPlay(false); };
+
+        playBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            playing ? aud.pause() : aud.play();
+        });
+
+        seekbar.addEventListener('click', e => {
+            e.stopPropagation();
+            const rect = seekbar.getBoundingClientRect();
+            aud.currentTime = ((e.clientX - rect.left) / rect.width) * aud.duration;
+            if (!playing) aud.play();
+        });
+
+        wrap._aud = aud;
+        return wrap;
+    }
+
+    function openSourceAudio(audioId, sourceItemType) {
+        if (!db || !audioId) { showToast('Sin nota original vinculada'); return; }
+        const req = db.transaction('grabaciones', 'readonly').objectStore('grabaciones').get(audioId);
+        req.onsuccess = () => {
+            const item    = req.result;
+            const overlay = document.getElementById('source-audio-overlay');
+            const label   = document.getElementById('sao-label');
+            const content = document.getElementById('sao-content');
+            closeSourceAudio();
+            content.innerHTML = '';
+            if (!item) {
+                label.textContent = 'Nota original';
+                content.innerHTML = `<div class="sao-text" style="color:var(--text-dim)">La nota original ya no está en la bandeja.</div>`;
+            } else if (item.type === 'text') {
+                label.textContent = '📝 Nota de texto original';
+                content.innerHTML = `<div class="sao-text">${item.textContent || '(sin texto)'}</div>`;
+            } else {
+                label.textContent = '🎙 Nota de voz original';
+                const player = buildSaoPlayer(item.blob);
+                content.appendChild(player);
+                player._aud.play();
+            }
+            overlay.classList.add('visible');
+        };
+    }
+
+    function closeSourceAudio() {
+        const overlay = document.getElementById('source-audio-overlay');
+        overlay.classList.remove('visible');
+        const content = document.getElementById('sao-content');
+        if (content._aud) { content._aud.pause(); content._aud.src = ''; }
+        content.querySelectorAll('audio').forEach(a => { a.pause(); a.src = ''; });
+        // pausar audio del buildSaoPlayer si existe
+        const wrap = content.querySelector('div');
+        if (wrap?._aud) { wrap._aud.pause(); wrap._aud.src = ''; }
+    }
+
+    // ============================================================
     // ITEM CARD CON SWIPE
     // ============================================================
     function createItemCard(item, catId, courseIdx, allCatIds = null) {
@@ -882,19 +1358,39 @@
         wrapper.className = 'item-wrapper';
         wrapper.id = `item-wrapper-${item.id}`;
 
+        const nappHtml = parseNapp(item.text);
+        const okHtml   = item._ok ? `<div class="ok-check">✓ ok</div>` : '';
+
         wrapper.innerHTML = `
             <div class="item-actions">
                 <button class="ia-btn ia-edit">✏️ Editar</button>
-                <button class="ia-btn ia-move">→ Mover</button>
+                <button class="ia-btn ia-ok${item._ok ? ' active' : ''}">✓ ok</button>
                 <button class="ia-btn ia-del">🗑</button>
             </div>
-            <div class="item-card" id="item-card-${item.id}">
-                <div class="item-text-display">${item.text}</div>
+            <div class="item-card${item._ok ? ' is-ok' : ''}" id="item-card-${item.id}">
+                <div class="item-text-display">${nappHtml}</div>
+                ${okHtml}
                 ${chipsHtml}
             </div>`;
 
         const card = wrapper.querySelector('.item-card');
         let startX = 0, curX = 0, isOpen = false;
+
+        // Doble tap en el texto → reproduce nota original
+        const textDisplay = wrapper.querySelector('.item-text-display');
+        let lastTap = 0;
+        textDisplay.addEventListener('click', e => {
+            const now = Date.now();
+            if (now - lastTap < 350) {
+                e.stopPropagation();
+                const course = srpResults[courseIdx];
+                openSourceAudio(item._sourceAudioId ?? course._sourceAudioId, item._sourceItemType ?? course._sourceItemType);
+                lastTap = 0;
+            } else {
+                lastTap = now;
+            }
+        });
+
 
         card.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
@@ -926,8 +1422,25 @@
         function snapBack(c) { c.style.transform = 'translateX(0)'; c.classList.remove('open'); isOpen = false; }
 
         wrapper.querySelector('.ia-edit').addEventListener('click', () => { snapBack(card); openEditMode(item, catId, courseIdx, wrapper); });
-        wrapper.querySelector('.ia-move').addEventListener('click', () => { snapBack(card); openCatPicker('move', item, catId, courseIdx, null, allCatIds); });
         wrapper.querySelector('.ia-del' ).addEventListener('click', () => { snapBack(card); deleteItem(item, catId, courseIdx, wrapper, allCatIds); });
+        wrapper.querySelector('.ia-ok'  ).addEventListener('click', () => {
+            snapBack(card);
+            saveUndo();
+            const newOk = !item._ok;
+            srpResults[courseIdx].categories[catId]?.forEach(i => { if (i.id === item.id) i._ok = newOk; });
+            item._ok = newOk;
+            persistPendingResults();
+            renderSRPResults();
+        });
+
+        // Chips de categoría → abre picker de categorización
+        wrapper.querySelectorAll('.item-multicat-chip').forEach(chip => {
+            chip.addEventListener('click', e => {
+                e.stopPropagation();
+                snapBack(card);
+                openCatPicker('move', item, catId, courseIdx, null, allCatIds);
+            });
+        });
 
         return wrapper;
     }
@@ -952,11 +1465,13 @@
             const newText = ta.value.trim();
             if (newText) {
                 saveUndo();
-                item.text = newText;
+                item.text    = newText;
+                item._edited = true;
+                item._ok     = false;
                 const arr = srpResults[courseIdx].categories[catId];
                 if (arr) {
                     const idx = arr.findIndex(i => i.id === item.id);
-                    if (idx >= 0) arr[idx].text = newText;
+                    if (idx >= 0) { arr[idx].text = newText; arr[idx]._edited = true; arr[idx]._ok = false; }
                 }
             }
             renderSRPResults();
@@ -1090,7 +1605,7 @@
         selected.forEach(targetCatId => {
             if (!dstCourse.categories[targetCatId]) dstCourse.categories[targetCatId] = [];
             if (!dstCourse.categories[targetCatId].some(i => i.text === item.text))
-                dstCourse.categories[targetCatId].push({ id: crypto.randomUUID(), text: item.text });
+                dstCourse.categories[targetCatId].push({ id: crypto.randomUUID(), text: item.text, _edited: true, _ok: false });
         });
 
         const n = selected.length;
@@ -1161,6 +1676,7 @@
 
     async function processAllWithGemini() {
         if (!confirm('¿Procesar todas las notas de la bandeja?')) return;
+        clearPendingResults();
         resetProcView();
         const apiKey = localStorage.getItem('gemini_api_key');
         if (!apiKey) { openApiKeyOverlay(true); return; }
@@ -1176,6 +1692,14 @@
             .sort((a, b) => b.timestamp - a.timestamp);
 
         if (!processableItems.length) { showToast('No hay notas para procesar'); btn.disabled = false; return; }
+
+        // Marcar todos como EN PROCESO
+        const markTx = db.transaction(['grabaciones'], 'readwrite');
+        const markStore = markTx.objectStore('grabaciones');
+        processableItems.forEach(i => { i.enProceso = true; markStore.put(i); });
+        await new Promise(res => { markTx.oncomplete = res; });
+        processedItemIds = new Set(processableItems.map(i => i.id));
+        renderRecordings();
 
         srpResults = [];
         procErrors = [];
@@ -1209,6 +1733,12 @@
                 courses.forEach(c => {
                     c._sourceLabel = typeLabel + (timeLabel ? ' · ' + timeLabel : '');
                     if (sourcePreview) c._sourcePreview = sourcePreview;
+                    c._sourceAudioId = item.id;
+                    c._sourceItemType = item.type;
+                    // Propagar fuente a cada ítem para que sobreviva el merge de cursos
+                    Object.values(c.categories || {}).forEach(arr =>
+                        arr.forEach(i => { i._sourceAudioId = item.id; i._sourceItemType = item.type; })
+                    );
                     srpResults.push(c);
                 });
                 if (statusEl) statusEl.textContent = '✅';
@@ -1244,6 +1774,7 @@
         // Snapshot del parseo original antes de cualquier edición manual
         originalParseSnapshot = JSON.parse(JSON.stringify(srpResults));
 
+        persistPendingResults();
         renderSRPResults();
         await renderMediaTaggers();
         renderProcErrors();
@@ -1335,13 +1866,14 @@
         info.btn.innerHTML = SVG_PLAY; info.btn.className = 'play-btn state-play';
         info.seekbar.querySelectorAll('.wave-bar').forEach(b => b.style.backgroundColor = '#30363d');
         info.currLabel.innerText = '0:00';
+        info.resetSpeed?.();
     }
 
     let touchStartY = 0, touchStartX = 0, isDragging = false, screenAtTouchStart = 0, swipeLocked = false;
 
     window.addEventListener('touchstart', e => {
         // Si el toque inicia dentro de cualquier overlay activo, bloquear navegación
-        swipeLocked = !!e.target.closest('#cat-picker-overlay, #export-overlay, #api-key-overlay, #drive-overlay, #tagger-overlay, #lightbox-overlay, #course-sheet-overlay');
+        swipeLocked = !!e.target.closest('#cat-picker-overlay, #export-overlay, #api-key-overlay, #drive-overlay, #tagger-overlay, #lightbox-overlay, #course-sheet-overlay, #source-audio-overlay');
         touchStartY = e.touches[0].clientY;
         touchStartX = e.touches[0].clientX;
         screenAtTouchStart = currentScreen;
@@ -2382,6 +2914,7 @@ Categorías vacías: array vacío [].`;
         pendingMediaCategories = {};
         undoStack = [];
         updateUndoBtn();
+        clearPendingResults();
     }
 
     function saveUndo() {
@@ -2591,13 +3124,16 @@ Categorías vacías: array vacío [].`;
             // 2. Armar los tres artefactos vinculados por timestamp
             const expOutput = buildExpectedOutput(dataSnapshot, timestamp);
 
-            // Fixture crudo: texto de nota de texto, o transcripción capturada durante el procesamiento de audio
+            // Fixture crudo: solo los ítems que pasaron por la pipeline de procesamiento
             const rawFixtures = allGrab
-                .filter(i => i.type === 'text' || (i.type || 'audio') === 'audio')
-                .map(i => {
-                    if (i.type === 'text') return { type: 'text', content: i.textContent || '' };
-                    const transcription = audioTranscriptions[i.id];
-                    return { type: 'audio', content: transcription || '', transcribed: !!transcription };
+                .filter(i => processedItemIds.has(i.id))
+                .flatMap(i => {
+                    if (i.type === 'text') {
+                        const content = i.textContent || '';
+                        return content.trim() ? [{ type: 'text', content }] : [];
+                    }
+                    const transcription = audioTranscriptions[i.id] || '';
+                    return transcription.trim() ? [{ type: 'audio', content: transcription, transcribed: true }] : [];
                 });
 
             // Parseo original de Gemini (antes de correcciones del usuario)
@@ -2629,15 +3165,27 @@ Categorías vacías: array vacío [].`;
             downloadExpectedOutput(fullRecord);
             uploadToDrive(fullRecord); // no bloquea — fallo silencioso con toast
 
-            // 4. Limpiar bandeja — solo items procesados exitosamente (los fallidos quedan para reintentar)
+            // 4. Limpiar bandeja: eliminar ítems EN PROCESO exitosos + todos los medios; conservar el resto
             const failedIds = new Set(procErrors.filter(e => e.itemId).map(e => e.itemId));
             await new Promise((res, rej) => {
                 const tx = db.transaction(['grabaciones'], 'readwrite');
                 const store = tx.objectStore('grabaciones');
-                allGrab.forEach(item => { if (!failedIds.has(item.id)) store.delete(item.id); });
+                allGrab.forEach(item => {
+                    if (item.type === 'photo' || item.type === 'video') {
+                        store.delete(item.id);
+                    } else if (item.enProceso) {
+                        if (failedIds.has(item.id)) {
+                            item.enProceso = false;
+                            store.put(item);
+                        } else {
+                            store.delete(item.id);
+                        }
+                    }
+                });
                 tx.oncomplete = res;
                 tx.onerror = () => rej(tx.error);
             });
+            clearPendingResults();
 
             // 5. Reset UI
             srpResults = [];
@@ -2661,7 +3209,7 @@ Categorías vacías: array vacío [].`;
 
     function buildExpectedOutput(data, timestamp) {
         const d = new Date(timestamp);
-        const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+        const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
         const allWarnings = [];
         const courses = data.map(course => {
             const items = [];
@@ -2748,24 +3296,40 @@ Categorías vacías: array vacío [].`;
 
         const chipsHtml = cursos.map(c => `<div class="history-course-chip">${c}</div>`).join('');
 
+        const draftBadge = entry.isDraft
+            ? `<span style="font-size:0.68rem;font-weight:900;color:var(--warning);background:rgba(201,151,26,.12);border:1px solid rgba(201,151,26,.3);border-radius:6px;padding:2px 7px;margin-left:8px;text-transform:uppercase;letter-spacing:.05em">borrador</span>`
+            : '';
         wrapper.innerHTML = `
             <div class="history-del-bg">BORRAR</div>
-            <div class="history-entry">
-                <div class="history-entry-date">${fecha} · ${hora}</div>
-                <div class="history-entry-courses">${chipsHtml || '<span style="color:var(--text-dim);font-size:.8rem">GENERALs</span>'}</div>
+            <div class="history-entry"${entry.isDraft ? ' style="border-color:rgba(201,151,26,.3)"' : ''}>
+                <div class="history-entry-date">${fecha} · ${hora}${draftBadge}</div>
+                <div class="history-entry-courses">${chipsHtml || '<span style="color:var(--text-dim);font-size:.8rem">GENERAL</span>'}</div>
                 <div class="history-entry-meta">${totalItems} ítem${totalItems !== 1 ? 's' : ''}</div>
             </div>`;
 
         const card = wrapper.querySelector('.history-entry');
         const delBg = wrapper.querySelector('.history-del-bg');
 
-        // Tap → cargar en pantalla de resultados
+        // Tap → cargar en pantalla de resultados (auto-guarda borrador si hay informe activo)
         card.addEventListener('click', () => {
-            srpResults = JSON.parse(JSON.stringify(entry.data));
+            if (srpResults.length && db) {
+                const draft = {
+                    timestamp: Date.now(),
+                    data: JSON.parse(JSON.stringify(srpResults)),
+                    sessionNote: sessionNote || '',
+                    isDraft: true
+                };
+                const tx = db.transaction(['historial'], 'readwrite');
+                tx.objectStore('historial').add(draft);
+                tx.oncomplete = () => renderHistorial();
+            }
+            srpResults  = JSON.parse(JSON.stringify(entry.data));
+            sessionNote = entry.sessionNote || '';
+            persistPendingResults();
             renderSRPResults();
             moveScreen(2);
             showProcResults(false);
-            showToast('Resultado cargado');
+            showToast(srpResults.length ? '💾 Borrador guardado · Resultado cargado' : 'Resultado cargado');
         });
 
         // Swipe izquierdo → borrar
@@ -2808,7 +3372,7 @@ Categorías vacías: array vacío [].`;
     function fmt(s) { return isNaN(s) ? '0:00' : Math.floor(s/60) + ':' + Math.floor(s%60).toString().padStart(2,'0'); }
 
     const req = indexedDB.open('SRP_VozDB', 3);
-    req.onsuccess       = e => { db = e.target.result; renderRecordings(); renderHistorial(); updateTopDate(); updateDriveBtn(); };
+    req.onsuccess       = e => { db = e.target.result; renderRecordings(); renderHistorial(); updateTopDate(); updateDriveBtn(); recoverPendingResults(); };
     req.onupgradeneeded = e => {
         const d = e.target.result;
         if (!d.objectStoreNames.contains('grabaciones'))      d.createObjectStore('grabaciones',      { keyPath: 'id', autoIncrement: true });
@@ -2912,8 +3476,15 @@ Categorías vacías: array vacío [].`;
                     currentGroup = group; dayIdx++;
                     daySection = document.createElement('div');
                     daySection.className = `day-section day-section-${dayIdx % 2}`;
+                    if (collapsedDays.has(group)) daySection.classList.add('day-collapsed');
                     const h = document.createElement('div');
-                    h.className = 'day-title'; h.innerText = group;
+                    h.className = 'day-title';
+                    h.innerHTML = `<span>${group}</span><span class="day-chevron">▾</span>`;
+                    h.addEventListener('click', () => {
+                        const isNowCollapsed = !collapsedDays.has(group);
+                        if (isNowCollapsed) collapsedDays.add(group); else collapsedDays.delete(group);
+                        daySection.classList.toggle('day-collapsed', isNowCollapsed);
+                    });
                     daySection.appendChild(h);
                     list.appendChild(daySection);
                 }
@@ -2930,27 +3501,53 @@ Categorías vacías: array vacío [].`;
         wrapper.className = 'audio-wrapper ' + dayClass;
         wrapper.id = `wrapper-${item.id}`;
         const displayTime = get24hTime(new Date(item.timestamp));
+        const rightTag = item.enProceso
+            ? '<span class="tag-en-proceso">En proceso</span>'
+            : `<div class="sel-indicator" id="sel-ind-${item.id}"></div>`;
         wrapper.innerHTML = `
             <div class="swipe-action swipe-record">EDITAR</div>
-            <div class="swipe-action swipe-delete">BORRAR</div>
+            <div class="swipe-action swipe-delete">${item.enProceso ? 'RESETEAR' : 'BORRAR'}</div>
             <div class="audio-card" id="card-${item.id}">
                 <div class="play-btn" style="cursor:default;flex-shrink:0">${SVG_TEXT}</div>
                 <div class="player-content">
                     <div class="player-top">
                         <span class="audio-time-label">${displayTime}</span>
+                        ${rightTag}
                     </div>
                     <div class="text-card-preview" id="text-preview-${item.id}">${item.textContent}</div>
                 </div>
             </div>`;
         container.appendChild(wrapper);
         const card = wrapper.querySelector('.audio-card');
+        card.classList.add('text-card');
+        card.addEventListener('click', () => {
+            if (selectionMode) return;
+            if (card.querySelector('textarea')) return;
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
+                card.style.height = '';
+            } else {
+                card.style.height = card.scrollHeight + 'px';
+                card.classList.add('expanded');
+            }
+        });
 
         let sX = 0, sY = 0, curX = 0, localAxis = null;
+        let lpTimer = null, lpStartX = 0, lpStartY = 0, lpJustFired = false;
         card.addEventListener('touchstart', e => {
             sX = e.touches[0].clientX; sY = e.touches[0].clientY;
             localAxis = null; card.style.transition = 'none';
+            if (!item.enProceso && !selectionMode) {
+                lpStartX = e.touches[0].clientX; lpStartY = e.touches[0].clientY;
+                lpTimer = setTimeout(() => { lpTimer = null; lpJustFired = true; enterSelectionMode(item.id); }, 500);
+            }
         }, { passive: true });
         card.addEventListener('touchmove', e => {
+            if (lpTimer !== null) {
+                const dx = Math.abs(e.touches[0].clientX - lpStartX), dy = Math.abs(e.touches[0].clientY - lpStartY);
+                if (dx > 10 || dy > 10) { clearTimeout(lpTimer); lpTimer = null; }
+            }
+            if (selectionMode) return;
             const rawDx = e.touches[0].clientX - sX, rawDy = e.touches[0].clientY - sY;
             if (!localAxis && (Math.abs(rawDx) > 10 || Math.abs(rawDy) > 10)) {
                 localAxis = Math.abs(rawDx) > Math.abs(rawDy) ? 'h' : 'v';
@@ -2963,9 +3560,16 @@ Categorías vacías: array vacío [].`;
             wrapper.querySelector('.swipe-delete').style.opacity = curX < -40 ? '1' : '0';
         }, { passive: true });
         card.addEventListener('touchend', () => {
+            clearTimeout(lpTimer); lpTimer = null;
+            if (lpJustFired) { lpJustFired = false; curX = 0; localAxis = null; return; }
+            if (selectionMode) {
+                if (!item.enProceso && Math.abs(curX) < 10) toggleSelection(item.id);
+                curX = 0; localAxis = null;
+                return;
+            }
             card.style.transition = 'transform 0.5s cubic-bezier(0.175,.885,.32,1.275)';
-            if      (curX < -190) deleteRec(item.id);
-            else if (curX >  190) openTextEdit(item, card);
+            if      (curX < -190) { item.enProceso ? resetEnProceso(item.id) : deleteRec(item.id); }
+            else if (curX >  190 && !item.enProceso) openTextEdit(item, card);
             card.style.transform = 'translateX(0)';
             wrapper.querySelector('.swipe-record').style.opacity = '0';
             wrapper.querySelector('.swipe-delete').style.opacity = '0';
@@ -2985,6 +3589,9 @@ Categorías vacías: array vacío [].`;
                     </div>
                     <div class="text-card-preview">${text}</div>
                 </div>`;
+            card.classList.add('text-card');
+            card.classList.remove('expanded');
+            card.style.height = '';
         }
         card.innerHTML = `
             <div class="play-btn" style="cursor:default;flex-shrink:0">${SVG_TEXT}</div>
@@ -3111,17 +3718,25 @@ Categorías vacías: array vacío [].`;
         const wrapper = document.createElement('div');
         wrapper.className = 'audio-wrapper ' + dayClass;
         wrapper.id = `wrapper-${item.id}`;
+        const rightTag = item.enProceso
+            ? '<span class="tag-en-proceso">En proceso</span>'
+            : item.regrabado
+                ? '<span class="tag-regrabado">Regrabado</span>'
+                : `<div class="sel-indicator" id="sel-ind-${item.id}"></div>`;
         wrapper.innerHTML = `
             <div class="swipe-action swipe-record">REGRABAR</div>
-            <div class="swipe-action swipe-delete">BORRAR</div>
+            <div class="swipe-action swipe-delete">${item.enProceso ? 'RESETEAR' : 'BORRAR'}</div>
             <div class="audio-card" id="card-${item.id}">
                 <button class="play-btn state-play">${SVG_PLAY}</button>
                 <div class="player-content">
                     <div class="player-top">
                         <span class="audio-time-label">${displayTime}</span>
-                        ${item.regrabado ? '<span class="tag-regrabado">Regrabado</span>' : '<span></span>'}
+                        ${rightTag}
                     </div>
-                    <div class="seekbar-container"></div>
+                    <div class="seekbar-row">
+                        <div class="seekbar-container"></div>
+                        <button class="speed-chip">x1</button>
+                    </div>
                     <div class="player-bottom"><span class="curr">0:00</span><span class="total">0:00</span></div>
                 </div>
             </div>`;
@@ -3135,6 +3750,19 @@ Categorías vacías: array vacío [].`;
         const currLabel = card.querySelector('.curr');
 
         generateWaveform(item.blob, seekbar);
+
+        const speedBtn = card.querySelector('.speed-chip');
+        const speeds = [1, 1.5, 2];
+        let speedIdx = 0;
+        speedBtn.style.visibility = 'hidden';
+        function resetSpeed() { speedIdx = 0; aud.playbackRate = 1; speedBtn.textContent = 'x1'; speedBtn.style.visibility = 'hidden'; }
+        speedBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            speedIdx = (speedIdx + 1) % speeds.length;
+            aud.playbackRate = speeds[speedIdx];
+            speedBtn.textContent = `x${speeds[speedIdx]}`;
+        });
+
         aud.onloadedmetadata = () => card.querySelector('.total').innerText = fmt(aud.duration);
         aud.ontimeupdate = () => {
             const pct = aud.currentTime / aud.duration;
@@ -3145,6 +3773,7 @@ Categorías vacías: array vacío [].`;
         };
         aud.onended = () => {
             setPlayState(false); playing = false; aud.currentTime = 0;
+            resetSpeed();
             if (activeAudioInfo?.aud === aud) activeAudioInfo = null;
             if (lastPlayedWrapperId) { const prev = document.getElementById(lastPlayedWrapperId); prev?.querySelector('.audio-card')?.classList.remove('card-last-played'); }
             lastPlayedWrapperId = wrapper.id;
@@ -3156,6 +3785,7 @@ Categorías vacías: array vacío [].`;
             playing = p;
             playBtn.innerHTML = p ? SVG_PAUSE : SVG_PLAY;
             playBtn.className = p ? 'play-btn state-pause' : 'play-btn state-play';
+            speedBtn.style.visibility = p ? '' : 'hidden';
         }
         playBtn.addEventListener('click', e => {
             e.stopPropagation();
@@ -3163,7 +3793,7 @@ Categorías vacías: array vacío [].`;
                 if (activeAudioInfo && activeAudioInfo.aud !== aud) resetAudioUI(activeAudioInfo);
                 if (lastPlayedWrapperId) { document.getElementById(lastPlayedWrapperId)?.querySelector('.audio-card')?.classList.remove('card-last-played'); lastPlayedWrapperId = null; }
                 aud.play(); setPlayState(true);
-                activeAudioInfo = { aud, btn: playBtn, seekbar, currLabel };
+                activeAudioInfo = { aud, btn: playBtn, seekbar, currLabel, resetSpeed };
             } else {
                 aud.pause(); setPlayState(false);
             }
@@ -3179,11 +3809,21 @@ Categorías vacías: array vacío [].`;
         });
 
         let sX = 0, sY = 0, curX = 0, localAxis = null;
+        let lpTimer = null, lpStartX = 0, lpStartY = 0, lpJustFired = false;
         card.addEventListener('touchstart', e => {
             sX = e.touches[0].clientX; sY = e.touches[0].clientY;
             localAxis = null; card.style.transition = 'none';
+            if (!item.enProceso && !selectionMode) {
+                lpStartX = e.touches[0].clientX; lpStartY = e.touches[0].clientY;
+                lpTimer = setTimeout(() => { lpTimer = null; lpJustFired = true; enterSelectionMode(item.id); }, 500);
+            }
         }, { passive: true });
         card.addEventListener('touchmove', e => {
+            if (lpTimer !== null) {
+                const dx = Math.abs(e.touches[0].clientX - lpStartX), dy = Math.abs(e.touches[0].clientY - lpStartY);
+                if (dx > 10 || dy > 10) { clearTimeout(lpTimer); lpTimer = null; }
+            }
+            if (selectionMode) return;
             const rawDx = e.touches[0].clientX - sX, rawDy = e.touches[0].clientY - sY;
             if (!localAxis && (Math.abs(rawDx) > 10 || Math.abs(rawDy) > 10)) {
                 localAxis = Math.abs(rawDx) > Math.abs(rawDy) ? 'h' : 'v';
@@ -3196,9 +3836,16 @@ Categorías vacías: array vacío [].`;
             wrapper.querySelector('.swipe-delete').style.opacity = curX < -40 ? '1' : '0';
         }, { passive: true });
         card.addEventListener('touchend', () => {
+            clearTimeout(lpTimer); lpTimer = null;
+            if (lpJustFired) { lpJustFired = false; curX = 0; localAxis = null; return; }
+            if (selectionMode) {
+                if (!item.enProceso && Math.abs(curX) < 10) toggleSelection(item.id);
+                curX = 0; localAxis = null;
+                return;
+            }
             card.style.transition = 'transform 0.5s cubic-bezier(0.175,.885,.32,1.275)';
-            if      (curX < -190) deleteRec(item.id);
-            else if (curX >  190 && confirm('¿Regrabar sobre esta nota?')) { reRecordingId = item.id; moveScreen(0); setTimeout(() => startRecording(), 450); }
+            if      (curX < -190) { item.enProceso ? resetEnProceso(item.id) : deleteRec(item.id); }
+            else if (curX >  190 && !item.enProceso && confirm('¿Regrabar sobre esta nota?')) { reRecordingId = item.id; moveScreen(0); setTimeout(() => startRecording(), 450); }
             card.style.transform = 'translateX(0)'; curX = 0; localAxis = null;
         });
     }
