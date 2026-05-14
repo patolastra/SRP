@@ -2857,18 +2857,49 @@
             .filter(e => (e.data||[]).some(c => c.curso === courseName))
             .sort((a,b) => b.timestamp - a.timestamp)
             .map(e => ({ timestamp: e.timestamp, course: e.data.find(c => c.curso === courseName) }));
-        // 1. Descartar entradas sin contenido visible (primero, para no ocultar datos reales al deduplicar)
-        const conContenido = entries.filter(({ course }) =>
+
+        // Agrupar por fecha: los N guardados del mismo día son complementarios entre sí.
+        // Se acumulan todos los ítems (revisión + categorías), deduplicando por texto exacto.
+        const byDate = new Map();
+        entries.forEach(({ timestamp, course }) => {
+            const date = new Date(timestamp).toISOString().split('T')[0];
+            if (!byDate.has(date)) {
+                byDate.set(date, { timestamp, course: { revision: null, categories: {} } });
+            }
+            const merged = byDate.get(date).course;
+
+            // Revisión: normalizar a array y acumular ítems de todos los saves del día
+            if (course.revision) {
+                const items = Array.isArray(course.revision)
+                    ? course.revision
+                    : [{ text: course.revision }];
+                if (items.length) {
+                    if (!merged.revision) merged.revision = [];
+                    const visto = new Set(merged.revision.map(i => i.text || i));
+                    items.forEach(item => {
+                        const texto = item.text || item;
+                        if (!visto.has(texto)) { merged.revision.push(item); visto.add(texto); }
+                    });
+                }
+            }
+
+            // Categorías: acumular ítems de todos los saves del día, deduplicando por texto
+            CATS_SHOWN.forEach(catId => {
+                const items = course.categories?.[catId] || [];
+                if (!items.length) return;
+                if (!merged.categories[catId]) merged.categories[catId] = [];
+                const visto = new Set(merged.categories[catId].map(i => i.text || i));
+                items.forEach(item => {
+                    const texto = item.text || item;
+                    if (!visto.has(texto)) { merged.categories[catId].push(item); visto.add(texto); }
+                });
+            });
+        });
+
+        // Filtrar fechas sin contenido visible
+        return [...byDate.values()].filter(({ course }) =>
             course.revision || CATS_SHOWN.some(catId => (course.categories?.[catId] || []).length > 0)
         );
-        // 2. Deduplicar por fecha (conservar más reciente por día)
-        const seen = new Set();
-        return conContenido.filter(({ timestamp }) => {
-            const date = new Date(timestamp).toISOString().split('T')[0];
-            if (seen.has(date)) return false;
-            seen.add(date);
-            return true;
-        });
     }
     async function lwGetGlobalCat(catId) {
         const all = await lwAllHistorial();
