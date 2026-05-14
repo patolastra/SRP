@@ -495,8 +495,6 @@
         <button class="lw-drawer-btn" onclick="lwOpenPlanificaciones()">🧠 Planificaciones</button>
         <hr class="lw-drawer-hr">
         <button class="lw-drawer-btn" onclick="lwOpenCursosBrowser()">📚 Cursos</button>
-        <hr class="lw-drawer-hr">
-        <button class="lw-drawer-btn" onclick="lwMigrarHistorico()" style="opacity:.55;font-size:1rem">⬆️ Migrar histórico</button>
     </div>
 </div>
 
@@ -2480,15 +2478,19 @@
                 c.textContent = item.text || item;
                 revEl.appendChild(c);
             });
-        } else if (latest?.revision) {
-            const revRaw = latest.revision;
-            const revText = Array.isArray(revRaw) ? revRaw.map(i => i.text || i).join('\n') : revRaw;
-            const dateStr = latest._ts ? new Date(latest._ts).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' }) : (latest.fecha || '');
-            revEl.innerHTML = `<div class="lw-section-label">📝 Última clase</div>
-                ${dateStr ? `<div class="lw-revision-date">${dateStr}</div>` : ''}
-                <div class="lw-revision-text">${revText}</div>`;
         } else {
-            revEl.innerHTML = '<div class="lw-section-label">📝 Última clase</div><div class="lw-empty">Sin revisión registrada</div>';
+            // revision puede estar en .revision (string) o en .categories.revision (items movidos al renderizar)
+            const revItems = latest?.categories?.revision?.length ? latest.categories.revision : null;
+            const revRaw = revItems || (latest?.revision || null);
+            if (revRaw) {
+                const revText = Array.isArray(revRaw) ? revRaw.map(i => i.text || i).join('\n') : revRaw;
+                const dateStr = latest._ts ? new Date(latest._ts).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' }) : (latest.fecha || '');
+                revEl.innerHTML = `<div class="lw-section-label">📝 Última clase</div>
+                    ${dateStr ? `<div class="lw-revision-date">${dateStr}</div>` : ''}
+                    <div class="lw-revision-text">${revText}</div>`;
+            } else {
+                revEl.innerHTML = '<div class="lw-section-label">📝 Última clase</div><div class="lw-empty">Sin revisión registrada</div>';
+            }
         }
         content.appendChild(revEl);
 
@@ -2729,9 +2731,9 @@
             header.innerHTML = `${dateStr} <span style="margin-left:auto">▾</span>`;
             const body = document.createElement('div'); body.style.display = 'none';
 
-            if (course.revision) {
-                const revRaw = course.revision;
-                const revText = Array.isArray(revRaw) ? revRaw.map(i => i.text || i).join('\n') : revRaw;
+            const revSrc = course.revision?.length ? course.revision : (course.categories?.revision?.length ? course.categories.revision : null);
+            if (revSrc) {
+                const revText = Array.isArray(revSrc) ? revSrc.map(i => i.text || i).join('\n') : revSrc;
                 const r = document.createElement('div'); r.className = 'lw-revision-text'; r.textContent = revText;
                 body.appendChild(r);
             }
@@ -2880,11 +2882,12 @@
             }
             const merged = byDate.get(date).course;
 
-            // Revisión: normalizar a array y acumular ítems de todos los saves del día
-            if (course.revision) {
-                const items = Array.isArray(course.revision)
-                    ? course.revision
-                    : [{ text: course.revision }];
+            // Revisión: puede estar en course.revision (string) o en course.categories.revision (items)
+            const revSrc = course.categories?.revision?.length
+                ? course.categories.revision
+                : (course.revision || null);
+            if (revSrc) {
+                const items = Array.isArray(revSrc) ? revSrc : [{ text: revSrc }];
                 if (items.length) {
                     if (!merged.revision) merged.revision = [];
                     const visto = new Set(merged.revision.map(i => i.text || i));
@@ -2908,9 +2911,9 @@
             });
         });
 
-        // Filtrar fechas sin contenido visible
+        // Filtrar fechas sin contenido visible (revision mergeada o alguna categoría)
         return [...byDate.values()].filter(({ course }) =>
-            course.revision || CATS_SHOWN.some(catId => (course.categories?.[catId] || []).length > 0)
+            (course.revision?.length > 0) || CATS_SHOWN.some(catId => (course.categories?.[catId] || []).length > 0)
         );
     }
     async function lwGetGlobalCat(catId) {
