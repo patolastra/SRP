@@ -364,7 +364,7 @@
         .lw-section-sep { border: none; border-top: 1px solid var(--border); margin: 22px 0; opacity: 0.6; }
         .lw-item-card { background: var(--gray); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 9px; font-size: 1.16rem; line-height: 1.45; }
         .lw-empty { color: var(--text-dim); font-size: 1.02rem; padding: 6px 0 10px; }
-        .lw-revision-text { color: var(--text-dim); font-size: 1.1rem; line-height: 1.65; padding: 6px 0 10px; white-space: pre-line; }
+        .lw-revision-text { color: var(--text-dim); font-size: 1.1rem; line-height: 1.65; padding: 6px 0 10px; white-space: pre-line; font-style: italic; }
         .lw-revision-date { font-size: 0.87rem; color: var(--text-dim); opacity: .6; margin-bottom: 4px; }
         .lw-plan-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 18px; background: var(--gray); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 9px; font-size: 1.16rem; line-height: 1.45; cursor: pointer; }
         .lw-plan-row input[type=checkbox] { flex-shrink: 0; width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); cursor: pointer; }
@@ -421,6 +421,12 @@
         .lw-drawer-btn { display: flex; align-items: center; gap: 14px; padding: 18px 24px; font-size: 1.26rem; font-weight: 700; color: var(--text); cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
         .lw-drawer-btn:active { background: var(--gray); }
         .lw-drawer-hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+        .lw-drawer-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; cursor: pointer; user-select: none; }
+        .lw-drawer-toggle-row span { font-size: 1.1rem; font-weight: 700; color: var(--text-dim); letter-spacing: .04em; }
+        .lw-toggle-switch { width: 44px; height: 26px; border-radius: 13px; background: var(--border); position: relative; transition: background .22s; flex-shrink: 0; }
+        .lw-toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: left .22s; }
+        .lw-toggle-switch.on { background: var(--accent); }
+        .lw-toggle-switch.on::after { left: 21px; }
         .lw-plan-course-title { font-size: 1.05rem; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(201,151,26,.25); }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -485,6 +491,11 @@
     <!-- Drawer -->
     <div id="lw-drawer-overlay" onclick="closeDrawer()"></div>
     <div id="lw-drawer">
+        <div class="lw-drawer-toggle-row" onclick="lwToggleNapps(!lwShowNapps)">
+            <span>NAPPS</span>
+            <div id="lw-napp-toggle" class="lw-toggle-switch"></div>
+        </div>
+        <hr class="lw-drawer-hr">
         <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_apps')">💻 Apps</button>
         <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_casa')">🏠 Casa</button>
         <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_administrativos')">📋 Administrativos</button>
@@ -1304,6 +1315,22 @@
             `<em class="napp-inline-note">[${note.trim()}]</em>`
         );
         return html;
+    }
+
+    function lwFormatText(text) {
+        if (!text) return '';
+        // Escapar HTML antes de cualquier procesamiento
+        const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        if (lwShowNapps) return parseNapp(safe);
+        // Quitar NAPPs: cerrados y abiertos
+        return safe.replace(/,,,n[\s\S]*?[nN],,,/g, '').replace(/,,,n[\s\S]*$/, '').trim();
+    }
+
+    function lwToggleNapps(val) {
+        lwShowNapps = val;
+        const tog = document.getElementById('lw-napp-toggle');
+        if (tog) tog.classList.toggle('on', val);
+        if (lwCurrentCourse) lwRenderCourse(lwCurrentCourse);
     }
 
     // ============================================================
@@ -2249,6 +2276,8 @@
     let lwWeekOffset = 0;
     let lwSelectedDay = null;
     let lwMatOpen = false;
+    let lwShowNapps = false;
+    let lwCurrentCourse = null;
 
     // ── Helpers de fecha ──────────────────────────────────────
     function lwGetWeekDates(offset = 0) {
@@ -2328,6 +2357,7 @@
         }, { passive: true });
     })();
     function lwShowCourse(courseName) {
+        lwCurrentCourse = courseName;
         lwMatOpen = false;
         document.getElementById('lw-mat-panel').style.height = '0';
         document.getElementById('lw-pull-hint').textContent = '↓ materiales';
@@ -2336,6 +2366,7 @@
         history.pushState({ srp: 'lw-course' }, '');
     }
     function lwBackToDay() {
+        lwCurrentCourse = null;
         document.getElementById('lw-course-view').classList.remove('active');
     }
     function lwOpenList(title, renderFn) {
@@ -2458,7 +2489,7 @@
             planEl.innerHTML = '<div class="lw-section-label">🎵 Para esta clase</div>';
             if (salaItems.length) {
                 salaItems.forEach(item => {
-                    const c = document.createElement('div'); c.className = 'lw-item-card'; c.textContent = item.text || item.texto;
+                    const c = document.createElement('div'); c.className = 'lw-item-card'; c.innerHTML = lwFormatText(item.text || item.texto || '');
                     planEl.appendChild(c);
                 });
             } else {
@@ -2475,7 +2506,7 @@
             revEl.innerHTML = `<div class="lw-section-label">📝 Última clase <span style="font-size:.7rem;font-weight:600;opacity:.55;text-transform:none;letter-spacing:0"> · ${dateStr}</span></div>`;
             sbRevision.items.forEach(item => {
                 const c = document.createElement('div'); c.className = 'lw-revision-text';
-                c.textContent = item.text || item;
+                c.innerHTML = lwFormatText(item.text || item || '');
                 revEl.appendChild(c);
             });
         } else {
@@ -2487,7 +2518,7 @@
                 const dateStr = latest._ts ? new Date(latest._ts).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' }) : (latest.fecha || '');
                 revEl.innerHTML = `<div class="lw-section-label">📝 Última clase</div>
                     ${dateStr ? `<div class="lw-revision-date">${dateStr}</div>` : ''}
-                    <div class="lw-revision-text">${revText}</div>`;
+                    <div class="lw-revision-text">${lwFormatText(revText)}</div>`;
             } else {
                 revEl.innerHTML = '<div class="lw-section-label">📝 Última clase</div><div class="lw-empty">Sin revisión registrada</div>';
             }
@@ -2523,7 +2554,7 @@
             : (latest?.categories?.pendientes_materiales || []);
         if (matItems.length) {
             matItems.forEach(item => {
-                const c = document.createElement('div'); c.className = 'lw-item-card'; c.textContent = item.text;
+                const c = document.createElement('div'); c.className = 'lw-item-card'; c.innerHTML = lwFormatText(item.text || item.texto || '');
                 matContent.appendChild(c);
             });
         } else {
@@ -2734,7 +2765,7 @@
             const revSrc = course.revision?.length ? course.revision : (course.categories?.revision?.length ? course.categories.revision : null);
             if (revSrc) {
                 const revText = Array.isArray(revSrc) ? revSrc.map(i => i.text || i).join('\n') : revSrc;
-                const r = document.createElement('div'); r.className = 'lw-revision-text'; r.textContent = revText;
+                const r = document.createElement('div'); r.className = 'lw-revision-text'; r.innerHTML = lwFormatText(revText);
                 body.appendChild(r);
             }
             ['pendientes_sala','pendientes_planificacion','pendientes_materiales','posible_repertorio'].forEach(catId => {
@@ -2744,7 +2775,7 @@
                 lbl.textContent = LW_CAT_LABELS[catId] || catId;
                 body.appendChild(lbl);
                 arr.forEach(item => {
-                    const c = document.createElement('div'); c.className = 'lw-item-card'; c.textContent = item.text;
+                    const c = document.createElement('div'); c.className = 'lw-item-card'; c.innerHTML = lwFormatText(item.text || '');
                     body.appendChild(c);
                 });
             });
