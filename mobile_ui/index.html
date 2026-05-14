@@ -506,6 +506,8 @@
         <button class="lw-drawer-btn" onclick="lwOpenPlanificaciones()">🧠 Planificaciones</button>
         <hr class="lw-drawer-hr">
         <button class="lw-drawer-btn" onclick="lwOpenCursosBrowser()">📚 Cursos</button>
+        <hr class="lw-drawer-hr">
+        <button class="lw-drawer-btn" onclick="lwMigrarHistorico()" style="opacity:.55;font-size:1rem">⬆️ Sync historial</button>
     </div>
 </div>
 
@@ -2950,7 +2952,7 @@
         return result;
     }
 
-    // ── Migración datos históricos → Supabase ─────────────────
+    // ── Sync historial local → Supabase ──────────────────────
     async function lwMigrarHistorico() {
         closeDrawer();
         if (!sbClient) { showToast('Sin conexión a Supabase'); return; }
@@ -2958,31 +2960,26 @@
             showToast('⏳ Esperando datos de Supabase, reintenta en unos segundos');
             return;
         }
-        if (!confirm('¿Migrar todos los expected outputs locales a Supabase?\nEsto puede tardar unos segundos.')) return;
+        if (!confirm('¿Sincronizar historial local a Supabase?\nEsto sube todos los registros guardados en este dispositivo.')) return;
 
-        const all = await new Promise(res => {
-            if (!db) { res([]); return; }
-            const s = db.transaction('expected_outputs','readonly').objectStore('expected_outputs');
-            s.getAll().onsuccess = e => res(e.target.result || []);
-        });
+        const all = await lwAllHistorial();
+        if (!all.length) { showToast('No hay registros en historial local'); return; }
 
-        if (!all.length) { showToast('No hay expected outputs locales'); return; }
-
-        showToast(`Migrando ${all.length} registros...`);
+        showToast(`Sincronizando ${all.length} registros...`);
         let ok = 0, err = 0;
         for (const record of all) {
             try {
-                const fullRecord = JSON.parse(record.json);
-                const courses = fullRecord.expected_output?.courses || [];
-                if (!courses.length) continue;
+                const courses = record.data || [];
+                if (!courses.length) { ok++; continue; }
+                const fullRecord = { fixture_name: null, raw_fixtures: null, original_parse: null, expected_output: null };
                 await supabaseSync(fullRecord, record.timestamp, courses);
                 ok++;
             } catch(e) {
                 err++;
-                console.warn('Error migrando:', record.fixture_name, e);
+                console.warn('Error sincronizando:', record.timestamp, e);
             }
         }
-        showToast(`✅ Migración: ${ok} OK${err ? `, ${err} con error` : ''}`);
+        showToast(`✅ Sync: ${ok} OK${err ? `, ${err} con error` : ''}`);
     }
 
     // ── Swipe horizontal desde pantalla 0 ────────────────────
