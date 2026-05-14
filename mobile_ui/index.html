@@ -402,6 +402,10 @@
         #lw-list-bottom-bar { flex-shrink: 0; padding: 12px 20px 28px; background: var(--bg); border-top: 1px solid var(--border); }
         .lw-course-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .lw-course-selector .lw-course-btn { padding: 14px 10px; font-size: 1rem; border-radius: 14px; }
+        .lw-group-header { grid-column: 1 / -1; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; padding: 14px 2px 6px; }
+        .lw-course-btn.grupo-curso    { border-left: 3px solid #007aff; background: rgba(0,122,255,.10); }
+        .lw-course-btn.grupo-taller   { border-left: 3px solid #C9971A; background: rgba(201,151,26,.10); }
+        .lw-course-btn.grupo-jefatura { border-left: 3px solid #3fb950; background: rgba(63,185,80,.10); }
 
         /* Medios en curso */
         .lw-media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px 0 10px; }
@@ -482,16 +486,16 @@
     <!-- Drawer -->
     <div id="lw-drawer-overlay" onclick="closeDrawer()"></div>
     <div id="lw-drawer">
-        <button class="lw-drawer-btn" onclick="lwOpenCursosBrowser()">📚 Cursos</button>
-        <hr class="lw-drawer-hr">
-        <button class="lw-drawer-btn" onclick="lwOpenPlanificaciones()">🧠 Planificaciones</button>
-        <button class="lw-drawer-btn" onclick="lwOpenRepertorio()">🎼 Repertorio</button>
-        <hr class="lw-drawer-hr">
-        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_mensajes')">💬 Mensajes</button>
-        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_jefatura')">👥 Jefatura</button>
-        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_administrativos')">📋 Administrativos</button>
-        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_casa')">🏠 Casa</button>
         <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_apps')">💻 Apps</button>
+        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_casa')">🏠 Casa</button>
+        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_administrativos')">📋 Administrativos</button>
+        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_jefatura')">👥 Jefatura</button>
+        <button class="lw-drawer-btn" onclick="lwOpenGlobal('pendientes_mensajes')">💬 Mensajes</button>
+        <hr class="lw-drawer-hr">
+        <button class="lw-drawer-btn" onclick="lwOpenRepertorio()">🎼 Repertorio</button>
+        <button class="lw-drawer-btn" onclick="lwOpenPlanificaciones()">🧠 Planificaciones</button>
+        <hr class="lw-drawer-hr">
+        <button class="lw-drawer-btn" onclick="lwOpenCursosBrowser()">📚 Cursos</button>
         <hr class="lw-drawer-hr">
         <button class="lw-drawer-btn" onclick="lwMigrarHistorico()" style="opacity:.55;font-size:1rem">⬆️ Migrar histórico</button>
     </div>
@@ -2685,21 +2689,41 @@
     }
 
     // ── Drawer — cursos ───────────────────────────────────────
+    const CURSOS_GRUPOS = [
+        {
+            label: 'Cursos', clase: 'grupo-curso', color: '#007aff',
+            lista: ['PRIMERO','SEGUNDO','TERCERO','CUARTO','QUINTO','SEXTO','SEPTIMO','OCTAVO']
+        },
+        {
+            label: 'Talleres', clase: 'grupo-taller', color: '#C9971A',
+            lista: ['CUERDAS','RECREO','KIDS CASTIGADAS','CASTIGADAS']
+        },
+        {
+            label: 'Jefatura', clase: 'grupo-jefatura', color: '#3fb950',
+            lista: ['ORIENTACIÓN','ENLACE']
+        }
+    ];
     async function lwOpenCursosBrowser() {
         closeDrawer();
         lwOpenList('📚 Cursos', () => {
             const content = document.getElementById('lw-list-content');
-            const todos = [...new Set(Object.values(HORARIO).flat())].sort();
             content.innerHTML = '';
-            const wrap = document.createElement('div'); wrap.className = 'lw-course-selector';
-            todos.forEach(name => {
-                const btn = document.createElement('button'); btn.className = 'lw-course-btn';
-                btn.textContent = lwTitleCase(NOMBRE_CORTO[name] || name);
-                btn.title = lwTitleCase(name);
-                btn.addEventListener('click', () => lwOpenCursoHistory(name));
-                wrap.appendChild(btn);
+            CURSOS_GRUPOS.forEach(grupo => {
+                const wrap = document.createElement('div'); wrap.className = 'lw-course-selector';
+                const header = document.createElement('div'); header.className = 'lw-group-header';
+                header.style.color = grupo.color;
+                header.textContent = grupo.label;
+                wrap.appendChild(header);
+                grupo.lista.forEach(name => {
+                    const btn = document.createElement('button');
+                    btn.className = `lw-course-btn ${grupo.clase}`;
+                    btn.textContent = lwTitleCase(NOMBRE_CORTO[name] || name);
+                    btn.title = lwTitleCase(name);
+                    btn.addEventListener('click', () => lwOpenCursoHistory(name));
+                    wrap.appendChild(btn);
+                });
+                content.appendChild(wrap);
             });
-            content.appendChild(wrap);
         });
     }
 
