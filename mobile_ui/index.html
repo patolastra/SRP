@@ -2718,7 +2718,9 @@
             const body = document.createElement('div'); body.style.display = 'none';
 
             if (course.revision) {
-                const r = document.createElement('div'); r.className = 'lw-revision-text'; r.textContent = course.revision;
+                const revRaw = course.revision;
+                const revText = Array.isArray(revRaw) ? revRaw.map(i => i.text || i).join('\n') : revRaw;
+                const r = document.createElement('div'); r.className = 'lw-revision-text'; r.textContent = revText;
                 body.appendChild(r);
             }
             ['pendientes_sala','pendientes_planificacion','pendientes_materiales','posible_repertorio'].forEach(catId => {
@@ -2850,9 +2852,23 @@
     }
     async function lwGetAllForCourse(courseName) {
         const all = await lwAllHistorial();
-        return all.filter(e => (e.data||[]).some(c => c.curso === courseName))
-                  .sort((a,b) => b.timestamp - a.timestamp)
-                  .map(e => ({ timestamp: e.timestamp, course: e.data.find(c => c.curso === courseName) }));
+        const CATS_SHOWN = ['pendientes_sala','pendientes_planificacion','pendientes_materiales','posible_repertorio'];
+        const entries = all
+            .filter(e => (e.data||[]).some(c => c.curso === courseName))
+            .sort((a,b) => b.timestamp - a.timestamp)
+            .map(e => ({ timestamp: e.timestamp, course: e.data.find(c => c.curso === courseName) }));
+        // 1. Descartar entradas sin contenido visible (primero, para no ocultar datos reales al deduplicar)
+        const conContenido = entries.filter(({ course }) =>
+            course.revision || CATS_SHOWN.some(catId => (course.categories?.[catId] || []).length > 0)
+        );
+        // 2. Deduplicar por fecha (conservar más reciente por día)
+        const seen = new Set();
+        return conContenido.filter(({ timestamp }) => {
+            const date = new Date(timestamp).toISOString().split('T')[0];
+            if (seen.has(date)) return false;
+            seen.add(date);
+            return true;
+        });
     }
     async function lwGetGlobalCat(catId) {
         const all = await lwAllHistorial();
