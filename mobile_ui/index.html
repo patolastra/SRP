@@ -737,9 +737,8 @@
                     .eq('sesion_id', sesion.id)
                     .eq('contexto_id', contexto.id);
 
-                // Guardar pendientes (excluir revision)
+                // Guardar pendientes + revision
                 for (const [catId, items] of Object.entries(course.categories || {})) {
-                    if (catId === 'revision') continue;
                     for (const item of (items || [])) {
                         const texto = (item.text || item.texto || '').trim();
                         if (!texto) continue;
@@ -2858,6 +2857,7 @@
         const ctx = contextosPorNombre[courseName.toUpperCase()];
         if (!ctx) return null;
         try {
+            // Sesión más reciente ANTES de la fecha seleccionada (= última clase pasada)
             const { data: prevSesion } = await sbClient
                 .from('sesiones').select('id, fecha')
                 .eq('contexto_id', ctx.id)
@@ -2866,22 +2866,13 @@
                 .limit(1)
                 .maybeSingle();
             if (!prevSesion) return null;
-            const { data: srp } = await sbClient
-                .from('sesiones_srp').select('expected_output')
+            // Leer pendientes de revision guardados en esa sesión
+            const { data: revPends } = await sbClient
+                .from('pendientes').select('texto')
                 .eq('sesion_id', prevSesion.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-            if (!srp?.expected_output) return null;
-            const courses = srp.expected_output.courses || [];
-            const courseData = courses.find(c => (c.curso || '').toUpperCase() === courseName.toUpperCase());
-            if (!courseData) return null;
-            const revRaw = courseData.categories?.revision;
-            if (!revRaw) return null;
-            // Normalizar: string (prompt viejo) → array
-            const items = Array.isArray(revRaw) ? revRaw : [{ text: revRaw }];
-            if (!items.length) return null;
-            return { fecha: prevSesion.fecha, items };
+                .eq('categoria', 'revision');
+            if (!revPends?.length) return null;
+            return { fecha: prevSesion.fecha, items: revPends.map(p => ({ text: p.texto })) };
         } catch(e) {
             console.warn('Error cargando revisión Supabase:', e);
             return null;
