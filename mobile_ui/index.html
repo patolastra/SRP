@@ -715,49 +715,78 @@
     async function supabaseSync(fullRecord, timestamp, dataSnapshot) {
         if (!sbClient) return;
         try {
-            const fecha = new Date(timestamp).toISOString().split('T')[0];
+            const recordingDate = localDateStr(new Date(timestamp));
+            const CATS_FUTURE = ['pendientes_sala','pendientes_planificacion','pendientes_materiales',
+                                 'pendientes_casa','pendientes_administrativos','pendientes_mensajes',
+                                 'pendientes_jefatura','pendientes_apps','posible_repertorio'];
 
             for (const course of (dataSnapshot || [])) {
                 const nombre = (course.curso || '').toUpperCase();
                 const contexto = contextosPorNombre[nombre];
                 if (!contexto) continue;
 
-                // Encontrar o crear sesión
-                let { data: sesion } = await sbClient
-                    .from('sesiones').select('id')
-                    .eq('contexto_id', contexto.id).eq('fecha', fecha).maybeSingle();
-                if (!sesion) {
-                    const { data: nueva, error: errSesion } = await sbClient
-                        .from('sesiones').insert({ contexto_id: contexto.id, fecha }).select('id').single();
-                    if (errSesion) throw errSesion;
-                    sesion = nueva;
+                // Agrupar categorías por fecha destino (Opción B: temporalidad por categoría)
+                const porFecha = new Map(); // fecha → { catId: [items] }
+
+                // revision → sesión de la clase pasada más reciente
+                const revItems = getRevisionItems(course);
+                if (revItems.length) {
+                    const fechaRev = fechaClaseParaCategoria(nombre, recordingDate, 'revision');
+                    if (!porFecha.has(fechaRev)) porFecha.set(fechaRev, {});
+                    porFecha.get(fechaRev)['revision'] = revItems;
                 }
 
-                // Eliminar pendientes previos de esta sesión+contexto (deduplicación)
-                await sbClient.from('pendientes')
-                    .delete()
-                    .eq('sesion_id', sesion.id)
-                    .eq('contexto_id', contexto.id);
+                // demás categorías → próxima clase futura
+                CATS_FUTURE.forEach(catId => {
+                    const items = course.categories?.[catId] || [];
+                    if (!items.length) return;
+                    const fechaCat = fechaClaseParaCategoria(nombre, recordingDate, catId);
+                    if (!porFecha.has(fechaCat)) porFecha.set(fechaCat, {});
+                    if (!porFecha.get(fechaCat)[catId]) porFecha.get(fechaCat)[catId] = [];
+                    porFecha.get(fechaCat)[catId].push(...items);
+                });
 
-                // Guardar pendientes + revision
-                for (const [catId, items] of Object.entries(course.categories || {})) {
-                    for (const item of (items || [])) {
-                        const texto = (item.text || item.texto || '').trim();
-                        if (!texto) continue;
-                        await sbClient.from('pendientes').insert({
-                            contexto_id:  contexto.id,
-                            sesion_id:    sesion.id,
-                            categoria:    catId,
-                            texto,
-                            fecha_captura: new Date(timestamp).toISOString()
-                        });
+                if (!porFecha.size) continue;
+
+                let primeraFesion = null;
+                for (const [fecha, cats] of porFecha) {
+                    let { data: sesion } = await sbClient.from('sesiones').select('id')
+                        .eq('contexto_id', contexto.id).eq('fecha', fecha).maybeSingle();
+                    if (!sesion) {
+                        const { data: nueva, error } = await sbClient
+                            .from('sesiones').insert({ contexto_id: contexto.id, fecha })
+                            .select('id').single();
+                        if (error) throw error;
+                        sesion = nueva;
+                    }
+                    if (!primeraFesion) primeraFesion = sesion;
+
+                    // Cargar existentes para accumulate sin duplicar
+                    const { data: existing } = await sbClient.from('pendientes')
+                        .select('categoria, texto')
+                        .eq('sesion_id', sesion.id).eq('contexto_id', contexto.id);
+                    const existSet = new Set((existing || []).map(p => `${p.categoria}:::${p.texto}`));
+
+                    for (const [catId, items] of Object.entries(cats)) {
+                        for (const item of items) {
+                            const texto = (item.text || item.texto || '').trim();
+                            if (!texto) continue;
+                            const key = `${catId}:::${texto}`;
+                            if (existSet.has(key)) continue;
+                            await sbClient.from('pendientes').insert({
+                                contexto_id: contexto.id, sesion_id: sesion.id,
+                                categoria: catId, texto,
+                                fecha_captura: new Date(timestamp).toISOString()
+                            });
+                            existSet.add(key);
+                        }
                     }
                 }
 
-                // Guardar registro SRP solo en saves reales (no durante sync de historial)
-                if (fullRecord.fixture_name !== null) {
+                // Registro SRP solo en saves reales (fixture_name !== null)
+                if (fullRecord.fixture_name !== null && primeraFesion) {
                     await sbClient.from('sesiones_srp').insert({
-                        sesion_id:       sesion.id,
+                        sesion_id:       primeraFesion.id,
                         fixture_name:    fullRecord.fixture_name,
                         raw_fixtures:    fullRecord.raw_fixtures,
                         original_parse:  fullRecord.original_parse,
@@ -2265,6 +2294,10 @@
         'MIÉRCOLES': ['PRIMERO'],
         'JUEVES':    ['SEGUNDO', 'SEPTIMO', 'KIDS CASTIGADAS', 'OCTAVO', 'CASTIGADAS']
     };
+    const DIA_DOW = { 'LUNES': 1, 'MARTES': 2, 'MIÉRCOLES': 3, 'JUEVES': 4 };
+    const CURSO_DIA = {};
+    Object.entries(HORARIO).forEach(([dia, cursos]) => cursos.forEach(c => { CURSO_DIA[c] = dia; }));
+
     const LW_DIAS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES'];
     const LW_DIA_JS = { 1:'LUNES', 2:'MARTES', 3:'MIÉRCOLES', 4:'JUEVES' };
     const LW_DIA_SHORT = { 'LUNES':'L', 'MARTES':'M', 'MIÉRCOLES':'W', 'JUEVES':'J' };
@@ -2293,6 +2326,39 @@
         return Object.fromEntries(LW_DIAS.map((d, i) => [d, new Date(mon.getTime() + i * 86400000)]));
     }
     function lwTodayName() { return LW_DIA_JS[new Date().getDay()] || null; }
+
+    function localDateStr(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+    // revision → última clase pasada ≤ recordingDate; demás → próxima clase futura > recordingDate
+    function fechaClaseParaCategoria(curseName, recordingDate, catId) {
+        const dia = CURSO_DIA[curseName];
+        if (!dia) return recordingDate;
+        const dow = DIA_DOW[dia]; // 1=lunes ... 4=jueves
+        const rec = new Date(recordingDate + 'T12:00:00');
+        const recDow = rec.getDay(); // 0=dom, 1=lun ...
+        if (catId === 'revision') {
+            const diff = (recDow - dow + 7) % 7;
+            const past = new Date(rec);
+            past.setDate(rec.getDate() - diff);
+            return localDateStr(past);
+        } else {
+            let diff = (dow - recDow + 7) % 7;
+            if (diff === 0) diff = 7; // mismo día → siguiente semana
+            const future = new Date(rec);
+            future.setDate(rec.getDate() + diff);
+            return localDateStr(future);
+        }
+    }
+    // revision puede vivir en course.revision (string) o en course.categories.revision (array)
+    function getRevisionItems(course) {
+        const fromCats = course.categories?.revision || [];
+        if (fromCats.length) return fromCats;
+        if (course.revision?.trim()) return [{ text: course.revision.trim() }];
+        return [];
+    }
 
     // ── Navegación ────────────────────────────────────────────
     function enterLeftWorld() {
@@ -2454,7 +2520,7 @@
         // Fecha de la sesión seleccionada en el Panel
         const dates = lwGetWeekDates(lwWeekOffset);
         const dateObj = dates[lwSelectedDay];
-        const fecha = dateObj ? dateObj.toISOString().split('T')[0] : null;
+        const fecha = dateObj ? localDateStr(dateObj) : null;
 
         // Cargar datos en paralelo
         const [planItems, sbPends, sbRevision, latest] = await Promise.all([
@@ -2761,9 +2827,105 @@
         document.getElementById('lw-list-title').textContent = lwTitleCase(courseName);
         const content = document.getElementById('lw-list-content');
         content.innerHTML = '<div class="lw-empty">Cargando...</div>';
-        const entries = await lwGetAllForCourse(courseName);
-        content.innerHTML = '';
-        if (!entries.length) { content.innerHTML = '<div class="lw-empty">Sin registros para este curso</div>'; return; }
+
+        const upper = courseName.toUpperCase();
+        const ctx = contextosPorNombre[upper];
+
+        if (!sbClient || !ctx) {
+            // Fallback a IndexedDB si no hay conexión a Supabase
+            const entries = await lwGetAllForCourse(courseName);
+            content.innerHTML = '';
+            if (!entries.length) { content.innerHTML = '<div class="lw-empty">Sin registros para este curso</div>'; return; }
+            lwRenderCursoHistoryLocal(content, entries);
+            return;
+        }
+
+        try {
+            const { data: sesiones } = await sbClient
+                .from('sesiones').select('id, fecha')
+                .eq('contexto_id', ctx.id)
+                .order('fecha', { ascending: false });
+
+            if (!sesiones?.length) {
+                content.innerHTML = '<div class="lw-empty">Sin sesiones registradas</div>';
+                return;
+            }
+
+            const sesionIds = sesiones.map(s => s.id);
+            const { data: pends } = await sbClient
+                .from('pendientes').select('sesion_id, categoria, texto')
+                .in('sesion_id', sesionIds);
+
+            const pendsBySes = new Map();
+            (pends || []).forEach(p => {
+                if (!pendsBySes.has(p.sesion_id)) pendsBySes.set(p.sesion_id, []);
+                pendsBySes.get(p.sesion_id).push(p);
+            });
+
+            content.innerHTML = '';
+            const CATS_SHOWN = ['pendientes_sala','pendientes_planificacion','pendientes_materiales','posible_repertorio'];
+            let hasContent = false;
+
+            for (const ses of sesiones) {
+                const items = pendsBySes.get(ses.id) || [];
+                const revItems = items.filter(p => p.categoria === 'revision');
+                const catGroups = CATS_SHOWN
+                    .map(catId => ({ catId, items: items.filter(p => p.categoria === catId) }))
+                    .filter(g => g.items.length);
+
+                if (!revItems.length && !catGroups.length) continue;
+                hasContent = true;
+
+                const dateStr = new Date(ses.fecha + 'T12:00:00').toLocaleDateString('es-CL', {
+                    weekday: 'long', day: 'numeric', month: 'long'
+                });
+                const section = document.createElement('div');
+                section.style.marginBottom = '18px';
+                const header = document.createElement('div');
+                header.className = 'lw-section-label';
+                header.style.cursor = 'pointer';
+                header.innerHTML = `${dateStr} <span style="margin-left:auto">▾</span>`;
+                const body = document.createElement('div');
+                body.style.display = 'none';
+
+                revItems.forEach(p => {
+                    const r = document.createElement('div');
+                    r.className = 'lw-revision-text';
+                    r.innerHTML = lwFormatText(p.texto);
+                    body.appendChild(r);
+                });
+                catGroups.forEach(({ catId, items }) => {
+                    const lbl = document.createElement('div');
+                    lbl.className = 'lw-section-label';
+                    lbl.style.marginTop = '10px';
+                    lbl.textContent = LW_CAT_LABELS[catId] || catId;
+                    body.appendChild(lbl);
+                    items.forEach(p => {
+                        const c = document.createElement('div');
+                        c.className = 'lw-item-card';
+                        c.innerHTML = lwFormatText(p.texto);
+                        body.appendChild(c);
+                    });
+                });
+
+                header.addEventListener('click', () => {
+                    const open = body.style.display !== 'none';
+                    body.style.display = open ? 'none' : 'block';
+                    header.querySelector('span').textContent = open ? '▾' : '▴';
+                });
+                section.appendChild(header);
+                section.appendChild(body);
+                content.appendChild(section);
+            }
+
+            if (!hasContent) content.innerHTML = '<div class="lw-empty">Sin registros para este curso</div>';
+        } catch (e) {
+            console.warn('Error cargando historial Supabase:', e);
+            content.innerHTML = '<div class="lw-empty">Error al cargar datos</div>';
+        }
+    }
+
+    function lwRenderCursoHistoryLocal(content, entries) {
         entries.forEach(({ timestamp, course }) => {
             const dateStr = new Date(timestamp).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
             const section = document.createElement('div'); section.style.marginBottom = '18px';
@@ -2909,7 +3071,7 @@
         // Se acumulan todos los ítems (revisión + categorías), deduplicando por texto exacto.
         const byDate = new Map();
         entries.forEach(({ timestamp, course }) => {
-            const date = new Date(timestamp).toISOString().split('T')[0];
+            const date = localDateStr(new Date(timestamp));
             if (!byDate.has(date)) {
                 byDate.set(date, { timestamp, course: { revision: null, categories: {} } });
             }
