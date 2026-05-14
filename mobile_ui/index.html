@@ -754,15 +754,17 @@
                     }
                 }
 
-                // Guardar registro SRP vinculado a esta sesión (habilita revisión en Panel)
-                await sbClient.from('sesiones_srp').insert({
-                    sesion_id:       sesion.id,
-                    fixture_name:    fullRecord.fixture_name,
-                    raw_fixtures:    fullRecord.raw_fixtures,
-                    original_parse:  fullRecord.original_parse,
-                    expected_output: fullRecord.expected_output,
-                    timestamp_ms:    timestamp
-                });
+                // Guardar registro SRP solo en saves reales (no durante sync de historial)
+                if (fullRecord.fixture_name !== null) {
+                    await sbClient.from('sesiones_srp').insert({
+                        sesion_id:       sesion.id,
+                        fixture_name:    fullRecord.fixture_name,
+                        raw_fixtures:    fullRecord.raw_fixtures,
+                        original_parse:  fullRecord.original_parse,
+                        expected_output: fullRecord.expected_output,
+                        timestamp_ms:    timestamp
+                    });
+                }
             }
 
             showToast('☁️ Guardado en Supabase');
@@ -2474,7 +2476,7 @@
                 cb.type = 'checkbox';
                 cb.checked = item.completado;
                 const txt = document.createElement('span');
-                txt.textContent = item.texto;
+                txt.innerHTML = lwFormatText(item.texto || '');
                 cb.addEventListener('change', () => {
                     row.classList.toggle('completado', cb.checked);
                     lwTogglePlanItem(item.id, cb.checked);
@@ -2693,7 +2695,7 @@
                     title.textContent = lwTitleCase(courseName); section.appendChild(title);
                     items.forEach(text => {
                         const card = document.createElement('div'); card.className = 'lw-item-card';
-                        card.textContent = text; section.appendChild(card);
+                        card.innerHTML = lwFormatText(text || ''); section.appendChild(card);
                     });
                     content.appendChild(section);
                 });
@@ -2715,7 +2717,13 @@
             items.forEach(({ courseName, text, timestamp }) => {
                 const d = new Date(timestamp).toLocaleDateString('es-CL', { day:'numeric', month:'short' });
                 const c = document.createElement('div'); c.className = 'lw-item-card';
-                c.innerHTML = `<div style="font-size:.72rem;color:var(--text-dim);margin-bottom:5px">${courseName} · ${d}</div>${text}`;
+                const meta = document.createElement('div');
+                meta.style.cssText = 'font-size:.72rem;color:var(--text-dim);margin-bottom:5px';
+                meta.textContent = `${courseName} · ${d}`;
+                c.appendChild(meta);
+                const body = document.createElement('div');
+                body.innerHTML = lwFormatText(text || '');
+                c.appendChild(body);
                 content.appendChild(c);
             });
         });
@@ -2891,10 +2899,11 @@
     async function lwGetAllForCourse(courseName) {
         const all = await lwAllHistorial();
         const CATS_SHOWN = ['pendientes_sala','pendientes_planificacion','pendientes_materiales','posible_repertorio'];
+        const upper = courseName.toUpperCase();
         const entries = all
-            .filter(e => (e.data||[]).some(c => c.curso === courseName))
+            .filter(e => (e.data||[]).some(c => c.curso === upper))
             .sort((a,b) => b.timestamp - a.timestamp)
-            .map(e => ({ timestamp: e.timestamp, course: e.data.find(c => c.curso === courseName) }));
+            .map(e => ({ timestamp: e.timestamp, course: e.data.find(c => c.curso === upper) }));
 
         // Agrupar por fecha: los N guardados del mismo día son complementarios entre sí.
         // Se acumulan todos los ítems (revisión + categorías), deduplicando por texto exacto.
